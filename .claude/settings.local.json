@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__trelis-gitingest-mcp__gitingest",
+      "Bash(npm i *)"
+    ]
+  }
+}
