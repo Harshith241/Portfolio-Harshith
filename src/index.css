@@ -41,33 +41,63 @@ body {
   animation: rgb-split 0.15s steps(2) 1;
 }
 
-/* easter egg: spider descends on a thread, dangles, climbs back */
-@keyframes spider-drop {
-  0% { height: 0; }
-  30% { height: 46vh; }
-  70% { height: 46vh; }
-  100% { height: 0; }
-}
+/* easter egg: spider drops in when you reach the end of the page — click = back to top */
 @keyframes spider-sway {
-  0%, 100% { transform: translateX(-6px) rotate(-4deg); }
-  50% { transform: translateX(6px) rotate(4deg); }
+  0%, 100% { transform: translateX(-5px) rotate(-3deg); }
+  50% { transform: translateX(5px) rotate(3deg); }
 }
 .spider-thread {
   position: fixed;
   top: 0;
-  left: 50%;
+  left: 72%;
   width: 1px;
-  background: linear-gradient(to bottom, transparent, var(--color-muted));
+  height: 0;
+  background: linear-gradient(to bottom, transparent 10%, var(--color-muted));
   z-index: 2001;
-  animation: spider-drop 4s ease-in-out forwards;
+  transition: height 0.9s cubic-bezier(0.34, 1.2, 0.4, 1);
   pointer-events: none;
+}
+.spider-thread.spider-down {
+  height: 34vh;
 }
 .spider-body {
   position: absolute;
-  bottom: -14px;
+  bottom: -16px;
   left: 50%;
   margin-left: -8px;
-  animation: spider-sway 1.6s ease-in-out infinite;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: spider-sway 1.8s ease-in-out infinite;
+}
+.spider-bubble {
+  position: absolute;
+  top: -4px;
+  left: 16px;
+  white-space: nowrap;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+  padding: 4px 9px;
+  border-radius: 999px 999px 999px 4px;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  opacity: 0;
+  transition: opacity 0.3s 0.9s;
+}
+.spider-down .spider-bubble {
+  opacity: 1;
+}
+.spider-body:hover .spider-bubble {
+  color: var(--color-text);
+  border-color: var(--color-red);
+}
+@media (prefers-reduced-motion: reduce) {
+  .spider-thread { transition: none; }
+  .spider-body { animation: none; }
+  .spider-bubble { transition: none; }
 }
 
 /* loader: monogram settles, red dot pops, overlay lifts away */

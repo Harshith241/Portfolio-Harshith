@@ -1,20 +1,35 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import SplitText from '../components/reactbits/SplitText'
 import Magnet from '../components/reactbits/Magnet'
 import { contact, identity } from '../data/content'
-import { prefersReducedMotion } from '../lib/lenis'
+import { getLenis, prefersReducedMotion } from '../lib/lenis'
 
-function Spider() {
+/* drops in when the footer is reached; clicking it crawls you back to the top */
+function SpiderGreeter({ down }: { down: boolean }) {
+  const backToTop = () => {
+    const lenis = getLenis()
+    if (lenis) lenis.scrollTo(0, { duration: 1.4 })
+    else window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+  }
   return (
-    <div className="spider-thread">
-      <svg className="spider-body" width="16" height="14" viewBox="0 0 16 14" aria-hidden>
-        <g stroke="#8A94A8" strokeWidth="1" fill="none">
-          <path d="M3 4 L0 1 M3 7 L0 7 M3 10 L1 13 M13 4 L16 1 M13 7 L16 7 M13 10 L15 13" />
-        </g>
-        <ellipse cx="8" cy="7" rx="4" ry="4.6" fill="#1C2536" stroke="#8A94A8" strokeWidth="1" />
-        <circle cx="6.6" cy="5.8" r="0.9" fill="#E63946" />
-        <circle cx="9.4" cy="5.8" r="0.9" fill="#E63946" />
-      </svg>
+    <div className={`spider-thread ${down ? 'spider-down' : ''}`}>
+      <button
+        type="button"
+        className="spider-body"
+        onClick={backToTop}
+        tabIndex={down ? 0 : -1}
+        aria-label="Back to the top"
+      >
+        <svg width="16" height="14" viewBox="0 0 16 14" aria-hidden>
+          <g stroke="#8A94A8" strokeWidth="1" fill="none">
+            <path d="M3 4 L0 1 M3 7 L0 7 M3 10 L1 13 M13 4 L16 1 M13 7 L16 7 M13 10 L15 13" />
+          </g>
+          <ellipse cx="8" cy="7" rx="4" ry="4.6" fill="#1C2536" stroke="#8A94A8" strokeWidth="1" />
+          <circle cx="6.6" cy="5.8" r="0.9" fill="#E63946" />
+          <circle cx="9.4" cy="5.8" r="0.9" fill="#E63946" />
+        </svg>
+        <span className="spider-bubble font-mono">back to the top?</span>
+      </button>
     </div>
   )
 }
@@ -22,8 +37,17 @@ function Spider() {
 export default function Contact() {
   const [copied, setCopied] = useState(false)
   const [spider, setSpider] = useState(false)
-  const clicks = useRef<number[]>([])
+  const footerRef = useRef<HTMLElement>(null)
   const reduced = prefersReducedMotion()
+
+  // the spider shows up whenever the very end of the page is in view
+  useEffect(() => {
+    const el = footerRef.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setSpider(e.isIntersecting), { threshold: 0.6 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   const copyEmail = async () => {
     try {
@@ -32,16 +56,6 @@ export default function Contact() {
       setTimeout(() => setCopied(false), 1800)
     } catch {
       window.location.href = `mailto:${identity.email}`
-    }
-  }
-
-  const onLogoClick = () => {
-    const now = Date.now()
-    clicks.current = [...clicks.current.filter((t) => now - t < 1200), now]
-    if (clicks.current.length >= 3 && !spider && !reduced) {
-      clicks.current = []
-      setSpider(true)
-      setTimeout(() => setSpider(false), 4200)
     }
   }
 
@@ -84,21 +98,18 @@ export default function Contact() {
         <a href={identity.resume} download className="hover:text-red">Resume ↓</a>
       </div>
 
-      <footer className="mt-24 flex flex-col gap-3 border-t border-border pt-8 font-mono text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-        <button
-          type="button"
-          id="footer-logo"
-          onClick={onLogoClick}
-          className="glitch-hover w-max cursor-pointer font-display text-lg font-bold text-text select-none"
-          aria-label="hv logo"
-        >
+      <footer
+        ref={footerRef}
+        className="mt-24 flex flex-col gap-3 border-t border-border pt-8 font-mono text-xs text-muted sm:flex-row sm:items-center sm:justify-between"
+      >
+        <span className="glitch-hover w-max font-display text-lg font-bold text-text select-none">
           {identity.monogram}
-        </button>
+        </span>
         <span>© 2026 {identity.name}</span>
         <span>{contact.footer}</span>
       </footer>
 
-      {spider && <Spider />}
+      <SpiderGreeter down={spider} />
     </section>
   )
 }

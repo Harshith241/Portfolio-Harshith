@@ -61,8 +61,12 @@ Phase status (see PLAN.md §9 for definitions):
   card ("DRAG — IT SPINS"). Beyond Code cards all Reveal'd, hiking photo full color.
   Contact: SplitText heading, email button copies to clipboard ("copied ✓" aria-live toast, mailto fallback),
   Magnet on desktop, link row (+Email ↗), footer `hv.` logo = .glitch-hover (hand-rolled 150ms RGB-split CSS —
-  GlitchText needs Tailwind-v3 keyframe config, skipped) + triple-click (<1.2s) spawns the CSS spider that
-  drops on a thread from the viewport top, dangles, climbs back (4s, .spider-thread/.spider-body in index.css).
+  GlitchText needs Tailwind-v3 keyframe config, skipped).
+  Spider easter egg (user-revised — was triple-click, too hidden): `SpiderGreeter` in Contact.tsx auto-drops
+  from the viewport top (left 72%) when the footer is ≥60% visible (IntersectionObserver toggles .spider-down;
+  height transition 0.9s), speech bubble "back to the top?" fades in; the spider is a <button> — click =
+  lenis.scrollTo(0) (window.scrollTo smooth fallback); retracts when the footer leaves view; reduced-motion
+  = no sway/transition.
   Loader: session-once `hv.` monogram overlay (CSS keyframes, lifts at ~1.2s, reduced-motion skipped).
   ⚠️ Verification note: the spider is position:fixed — the `main` transform debug trick breaks its placement;
   test it with real scroll only. Bundle: 173 KB gz main; three.js is a shared lazy chunk (256 KB gz) reused
