@@ -47,7 +47,12 @@ Phase status (see PLAN.md §9 for definitions):
   faces the camera. Copy: "3 piloting clients" (was "paying") in content.ts — user's wording, keep it.
   Note: R3F's JSX augmentation broke SplitText's dynamic tag → now uses React.createElement.
   Bundle: main 170 KB gz + lazy 257 KB three chunk.
-- [ ] Phase 6 — Agent Lab (TextType) + Skills (LogoLoop) + Honors
+- [x] **Phase 6 — Agent Lab + Skills + Honors**: Agent Lab = `TerminalStream` (custom, in AgentLab.tsx) —
+  streams the trace line-by-line (320ms) on 40% visibility, colors by prefix ([agent]=red, [tool]=blue,
+  //=muted), blinking cursor while streaming; deliberate deviation from PLAN's TextType (typewriter would
+  lose the per-line colors that showcase tool-calling). LogoLoop marquee of agent stack below (text-chip
+  nodes, fadeOut to #060A14, pauseOnHover). Skills = 3 LogoLoop rows (Languages left / Frameworks right /
+  Tools left, speed 55) + honors grid with red CountUp prizes. Verified desktop + 375px.
 - [ ] Phase 7 — Beyond Code bento + guitar 3D + Contact polish + loader + easter eggs
 - [ ] Phase 8 — Mobile/reduced-motion/perf/SEO audit + Vercel deploy
 
