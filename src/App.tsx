@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { initSmoothScroll, prefersReducedMotion } from './lib/lenis'
+import Loader from './components/Loader'
 import Nav from './components/Nav'
 import ProgressThread from './components/ProgressThread'
 import ClickSpark from './components/reactbits/ClickSpark'
@@ -19,6 +20,7 @@ export default function App() {
 
   return (
     <>
+      <Loader />
       <Nav />
       <ProgressThread />
       <main>

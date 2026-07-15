@@ -53,7 +53,20 @@ Phase status (see PLAN.md §9 for definitions):
   lose the per-line colors that showcase tool-calling). LogoLoop marquee of agent stack below (text-chip
   nodes, fadeOut to #060A14, pauseOnHover). Skills = 3 LogoLoop rows (Languages left / Frameworks right /
   Tools left, speed 55) + honors grid with red CountUp prizes. Verified desktop + 375px.
-- [ ] Phase 7 — Beyond Code bento + guitar 3D + Contact polish + loader + easter eggs
+- [x] **Phase 7 — Beyond Code + guitar + Contact + loader + easter eggs**:
+  Guitar = "Electric guitar" by Poly by Google via poly.pizza, CC-BY 3.0 (attribution line in the card —
+  do not remove), 804KB→101KB (gltf-transform optimize: draco + 512px texture). `src/three/GuitarScene.tsx`:
+  Float + slow yaw + PresentationControls (drag enabled only on pointer:fine, snaps back), red/blue rim
+  lights, `FramePauser` stops the frameloop off-screen/hidden tab; Lazy3D-mounted in the Beyond Code guitar
+  card ("DRAG — IT SPINS"). Beyond Code cards all Reveal'd, hiking photo full color.
+  Contact: SplitText heading, email button copies to clipboard ("copied ✓" aria-live toast, mailto fallback),
+  Magnet on desktop, link row (+Email ↗), footer `hv.` logo = .glitch-hover (hand-rolled 150ms RGB-split CSS —
+  GlitchText needs Tailwind-v3 keyframe config, skipped) + triple-click (<1.2s) spawns the CSS spider that
+  drops on a thread from the viewport top, dangles, climbs back (4s, .spider-thread/.spider-body in index.css).
+  Loader: session-once `hv.` monogram overlay (CSS keyframes, lifts at ~1.2s, reduced-motion skipped).
+  ⚠️ Verification note: the spider is position:fixed — the `main` transform debug trick breaks its placement;
+  test it with real scroll only. Bundle: 173 KB gz main; three.js is a shared lazy chunk (256 KB gz) reused
+  by both scenes; scene chunks ~1.5/14 KB.
 - [ ] Phase 8 — Mobile/reduced-motion/perf/SEO audit + Vercel deploy
 
 Notes for next session:
