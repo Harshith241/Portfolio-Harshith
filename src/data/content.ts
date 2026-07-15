@@ -15,7 +15,7 @@ export const identity = {
 
 export const about = {
   paragraphs: [
-    'I’m a CS sophomore at ASU who’d rather ship than speculate. I founded Chairside, a voice-AI platform that answers missed calls for dental practices and books appointments on its own — 3 paying clients and counting.',
+    'I’m a CS sophomore at ASU who’d rather ship than speculate. I founded Chairside, a voice-AI platform that answers missed calls for dental practices and books appointments on its own — 3 piloting clients and counting.',
     'My lane is AI agents that touch the real world: MCP servers, tool-calling pipelines, LangChain reasoning layers, and the unglamorous production work (idempotency, timezones, caller-ID truth) that makes them reliable.',
     'Before that: full-stack work at Publicis Sapient, an AR navigation app used by 500+ botanical-garden visitors, and an SWE internship at Tekplanit building calendar MCP tooling and an AI sales agent.',
   ],

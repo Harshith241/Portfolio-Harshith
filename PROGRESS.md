@@ -41,6 +41,10 @@ Phase status (see PLAN.md §9 for definitions):
   fetch). frameloop="demand" + invalidate() from ScrollTrigger onUpdate; DPR [1,1.5]; ContactShadows;
   `Lazy3D` wrapper mounts canvas on approach (rootMargin 400px); reduced-motion = static open pose.
   DEV helper: `window.__macProgress(0..1)` poses the model for headless verification.
+  User-requested fixes (iterated 3×, user wants it FAST — don't slow it back down): trigger `#mac-slot`
+  (`top 80%`, `end: '+=520'`, scrub 0.3). Closed-hold p<0.05, lid opens 0.05→0.2, FULL 360° yaw 0.2→1
+  (180° lands ~310px after the laptop appears ≈ one wheel gesture), screen swaps at p 0.6 while the back
+  faces the camera. Copy: "3 piloting clients" (was "paying") in content.ts — user's wording, keep it.
   Note: R3F's JSX augmentation broke SplitText's dynamic tag → now uses React.createElement.
   Bundle: main 170 KB gz + lazy 257 KB three chunk.
 - [ ] Phase 6 — Agent Lab (TextType) + Skills (LogoLoop) + Honors

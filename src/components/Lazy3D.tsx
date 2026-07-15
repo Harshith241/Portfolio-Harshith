@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 export default function Lazy3D({
   children,
   className = '',
+  id,
 }: {
   children: React.ReactNode
   className?: string
+  id?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [show, setShow] = useState(false)
@@ -26,7 +28,7 @@ export default function Lazy3D({
   }, [])
 
   return (
-    <div ref={ref} className={className}>
+    <div ref={ref} id={id} className={className}>
       {show ? children : null}
     </div>
   )

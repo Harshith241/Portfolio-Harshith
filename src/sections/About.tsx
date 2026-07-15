@@ -36,7 +36,10 @@ export default function About() {
               </figcaption>
             </figure>
           </Reveal>
-          <Lazy3D className="relative h-[340px] overflow-hidden rounded-2xl border border-border bg-surface lg:h-[400px]">
+          <Lazy3D
+            id="mac-slot"
+            className="relative h-[340px] overflow-hidden rounded-2xl border border-border bg-surface lg:h-[400px]"
+          >
             <Suspense
               fallback={
                 <div className="flex h-full items-center justify-center font-mono text-xs text-muted">

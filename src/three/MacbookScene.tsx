@@ -38,15 +38,18 @@ function Model({ progressRef }: { progressRef: React.MutableRefObject<number> })
 
   useFrame(() => {
     const p = progressRef.current
-    // 0 → 0.38: lid opens · 0.38 → 1: slow yaw (~120°)
-    const lidT = Math.min(p / 0.38, 1)
+    // 0 → 0.05: closed hold (so the user always sees it shut first)
+    // 0.05 → 0.2: lid opens fast · 0.2 → 1: one full 360° turn
+    // (whole sequence ≈ half a viewport of scroll — 180° lands within 1-2 wheel flicks)
+    const lidT = Math.min(Math.max((p - 0.05) / 0.15, 0), 1)
     const eased = 1 - Math.pow(1 - lidT, 3)
     if (hinge.current) hinge.current.rotation.x = LID_CLOSED + (LID_OPEN - LID_CLOSED) * eased
-    const yawT = Math.max(0, (p - 0.38) / 0.62)
-    if (spin.current) spin.current.rotation.y = Math.PI + yawT * 2.1
-    // screen switches to the agent trace mid-rotation
+    const yawT = Math.max(0, (p - 0.2) / 0.8)
+    if (spin.current) spin.current.rotation.y = Math.PI + yawT * Math.PI * 2
+    // swap the screen while its back faces the camera (~180°), so the agent
+    // trace is a reveal as the laptop comes back around
     const screen = materials['screen.001'] as THREE.MeshStandardMaterial
-    const want = p > 0.55 ? screen2 : screenDefault.current
+    const want = p > 0.6 ? screen2 : screenDefault.current
     if (want && screen.map !== want) {
       screen.map = want
       screen.needsUpdate = true
@@ -86,15 +89,17 @@ function ScrollDriver({ progressRef }: { progressRef: React.MutableRefObject<num
   }, [progressRef])
   useEffect(() => {
     if (prefersReducedMotion()) {
-      progressRef.current = 0.38 // lid open, front-facing, static
+      progressRef.current = 0.55 // lid open, front-facing, static
       invalidate()
       return
     }
+    // trigger = the MacBook's own slot: progress only starts once the (closed)
+    // laptop is actually on screen, then plays out over ~1100px of scroll
     const st = ScrollTrigger.create({
-      trigger: '#about',
-      start: 'top 75%',
-      end: 'bottom 40%',
-      scrub: 0.5,
+      trigger: '#mac-slot',
+      start: 'top 80%',
+      end: '+=520',
+      scrub: 0.3,
       onUpdate: (self) => {
         progressRef.current = self.progress
         invalidate()

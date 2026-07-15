@@ -23,7 +23,7 @@ Research takeaways baked into this plan (2026 state of the art):
   marquee dividers, scroll-rotating project deck, french-press loader, light theme. We take the *ambition level*,
   none of the elements.
 
-Differentiators for Harshith: **AI-agent-in-production story** (Chairside with paying clients), a
+Differentiators for Harshith: **AI-agent-in-production story** (Chairside with piloting clients), a
 **3D MacBook that assembles his story while scrolling**, and a **floating 3D guitar** in the fun section.
 
 ---
@@ -224,7 +224,7 @@ static poster image. Pause rendering when tab hidden or canvas off-screen. Reduc
 linkedin.com/in/harshithvijayan · B.S. Computer Science, ASU, expected May 2028 · 4.0 GPA, 4× Dean's List.
 
 **About paragraphs (tone: confident, concrete, no buzzword soup):**
-1. "I'm a CS sophomore at ASU who'd rather ship than speculate. I founded Chairside, a voice-AI platform that answers missed calls for dental practices and books appointments on its own — 3 paying clients and counting."
+1. "I'm a CS sophomore at ASU who'd rather ship than speculate. I founded Chairside, a voice-AI platform that answers missed calls for dental practices and books appointments on its own — 3 piloting clients and counting."
 2. "My lane is AI agents that touch the real world: MCP servers, tool-calling pipelines, LangChain reasoning layers, and the unglamorous production work (idempotency, timezones, caller-ID truth) that makes them reliable."
 3. "Before that: full-stack work at Publicis Sapient, an AR navigation app used by 500+ botanical-garden visitors, and an SWE internship at Tekplanit building calendar MCP tooling and an AI sales agent."
 
