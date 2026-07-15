@@ -52,6 +52,10 @@ Phase status (see PLAN.md §9 for definitions):
 - [ ] Phase 8 — Mobile/reduced-motion/perf/SEO audit + Vercel deploy
 
 Notes for next session:
+- ⚠️ NO black-&-white/desaturated treatment on photos of Harshith (reads as a Tamil memorial portrait — user
+  explicitly rejected it). Portrait is now `public/images/headshot-card.jpg`: FULL COLOR, cooled highlights
+  (backdrop only), edge vignette into page navy. headshot-duotone.jpg deleted. Same rule applies to the
+  hiking photo in Beyond Code (no grayscale hover).
 - ReactBits installs: `npx shadcn@latest add @react-bits/<Name>-TS-TW`
 - User assets received: resume.pdf ✓, hiking.jpg ✓, headshot.jpg ✓ (white-bg pro shot — needs duotone/dark treatment if used in About; decide in phase 3).
 - GLBs not yet sourced (phase 5/7); check license, credit CC-BY in footer if needed.

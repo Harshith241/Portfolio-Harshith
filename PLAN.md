@@ -177,7 +177,7 @@ One sentence of positioning copy above it. Keep the whole section under 80vh.
 
 Title: "When the laptop closes." Bento grid (CSS grid, mixed spans):
 
-- **Hiking/Bouldering** card (2×2): user's hiking photo, grayscale→color on hover, caption "happiest above 2,000ft — or 15ft up a wall."
+- **Hiking/Bouldering** card (2×2): user's hiking photo in full color (NO grayscale/desaturation on any photo of the user — cultural preference, reads as a memorial portrait), caption "happiest above 2,000ft — or 15ft up a wall."
 - **Guitar** card (2×2): the second 3D toy — low-poly **electric guitar GLB** in a tiny R3F canvas, drei `<Float>` +
   slow `<PresentationControls>` rotation; user can drag-spin it. Caption "currently torturing my neighbors with riffs."
 - **Movies** card (1×1): film-grain background, "will defend the Spider-Verse movies in any argument." ← the ONE explicit-ish theme nod, kept as a joke.
