@@ -1,8 +1,12 @@
+import { lazy, Suspense } from 'react'
 import SectionHeading from '../components/SectionHeading'
 import Reveal from '../components/Reveal'
+import Lazy3D from '../components/Lazy3D'
 import ScrollReveal from '../components/reactbits/ScrollReveal'
 import CountUp from '../components/reactbits/CountUp'
 import { about } from '../data/content'
+
+const MacbookScene = lazy(() => import('../three/MacbookScene'))
 
 // from=0.1 when decimals: CountUp derives its fraction digits from the inputs
 const stats = about.stats.map((s) => ({ ...s, from: s.decimals ? 0.1 : 0, to: s.value }))
@@ -32,10 +36,20 @@ export default function About() {
               </figcaption>
             </figure>
           </Reveal>
-          {/* MacBook 3D scene mounts here in phase 5 */}
-          <div className="flex min-h-40 items-center justify-center rounded-2xl border border-border bg-surface font-mono text-xs text-muted">
-            [ macbook.glb — phase 5 ]
-          </div>
+          <Lazy3D className="relative h-[340px] overflow-hidden rounded-2xl border border-border bg-surface lg:h-[400px]">
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center font-mono text-xs text-muted">
+                  booting…
+                </div>
+              }
+            >
+              <MacbookScene />
+            </Suspense>
+            <span className="pointer-events-none absolute bottom-3 left-4 font-mono text-[10px] tracking-widest text-muted">
+              SCROLL — IT OPENS
+            </span>
+          </Lazy3D>
         </div>
 
         {/* Right: story + stats */}

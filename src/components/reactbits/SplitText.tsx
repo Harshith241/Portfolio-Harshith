@@ -162,13 +162,9 @@ const SplitText: React.FC<SplitTextProps> = ({
       willChange: 'transform, opacity'
     };
     const classes = `split-parent overflow-hidden inline-block whitespace-normal ${className}`;
-    const Tag = (tag || 'p') as React.ElementType;
-
-    return (
-      <Tag ref={ref} style={style} className={classes}>
-        {text}
-      </Tag>
-    );
+    // React.createElement dodges the JSX 'never' inference that @react-three/fiber's
+    // global JSX augmentation triggers for dynamic string tags.
+    return React.createElement(tag || 'p', { ref, style, className: classes }, text);
   };
 
   return renderTag();

@@ -31,7 +31,18 @@ Phase status (see PLAN.md §9 for definitions):
   card data/particles — fights the theme; PLAN §4.4 explicitly allows this). Headshot re-treated (v4):
   monotonic duotone (natural face/teeth) + spotlight vignette — do NOT reintroduce the solarize curve.
   Bundle: 170 KB gz.
-- [ ] Phase 5 — MacBook 3D (source GLB → public/models/, light-blue tint, scroll scrub, screen textures)
+- [x] **Phase 5 — MacBook 3D**: model = `mac-draco.glb` from pmndrs/examples (MIT), 414KB→75KB after swapping
+  the embedded 2880×1800 screen jpeg for a generated terminal PNG (scripts used @gltf-transform/core +
+  draco3dgltf, now devDeps). Screen textures generated with Pillow (`public/images/screen-1/2.png` — boot
+  log + agent trace, brand colors, Menlo). `src/three/MacbookScene.tsx`: hinge = `screenflip` group,
+  rotation-x 1.575 (closed) → -0.425 (open) over first 38% of #about scroll progress, then yaw PI→+2.1rad;
+  screen swaps to agent-trace texture at p>0.55 (runtime texture: flipY=false + needsUpdate=true — REQUIRED,
+  else upside down). Body tinted #A7C7E7, metalness .35 (lights-only, no drei Environment = no runtime HDR
+  fetch). frameloop="demand" + invalidate() from ScrollTrigger onUpdate; DPR [1,1.5]; ContactShadows;
+  `Lazy3D` wrapper mounts canvas on approach (rootMargin 400px); reduced-motion = static open pose.
+  DEV helper: `window.__macProgress(0..1)` poses the model for headless verification.
+  Note: R3F's JSX augmentation broke SplitText's dynamic tag → now uses React.createElement.
+  Bundle: main 170 KB gz + lazy 257 KB three chunk.
 - [ ] Phase 6 — Agent Lab (TextType) + Skills (LogoLoop) + Honors
 - [ ] Phase 7 — Beyond Code bento + guitar 3D + Contact polish + loader + easter eggs
 - [ ] Phase 8 — Mobile/reduced-motion/perf/SEO audit + Vercel deploy
