@@ -71,7 +71,16 @@ Phase status (see PLAN.md §9 for definitions):
   ⚠️ Verification note: the spider is position:fixed — the `main` transform debug trick breaks its placement;
   test it with real scroll only. Bundle: 173 KB gz main; three.js is a shared lazy chunk (256 KB gz) reused
   by both scenes; scene chunks ~1.5/14 KB.
-- [ ] Phase 8 — Mobile/reduced-motion/perf/SEO audit + Vercel deploy
+- [x] **Phase 8 — Final audit** (deploy = user's move): guitar recolored to black (texture-level: extracted
+  PNG from GLB, hue-replaced greens+mustards → charcoal keeping shading, re-embedded; 80 KB). OG image
+  generated (`public/og.png`, PIL, brand style) + `theme-color` meta. Global `:focus-visible` red outline.
+  Reduced-motion gaps closed: ScrollFloat/ScrollReveal render static under reduce; LogoLoop rows render as
+  static chip wraps; glitch-hover disabled. README rewritten. Fixed: retracted spider peeked at viewport top
+  (body now opacity-0 + pointer-events-none until .spider-down). Production build (`npm run preview`)
+  smoke-tested: renders, zero console errors. Bundle: 173.5 KB gz main + lazy chunks (Threads 15 KB,
+  three 256 KB shared, scenes 1.5/14 KB) — within the 600 KB budget.
+  Deploy: user connects github.com/Harshith241/Portfolio-Harshith to Vercel (framework: Vite, build
+  `npm run build`, output `dist`). No rewrites needed (single page, hash anchors).
 
 Notes for next session:
 - ⚠️ NO black-&-white/desaturated treatment on photos of Harshith (reads as a Tamil memorial portrait — user

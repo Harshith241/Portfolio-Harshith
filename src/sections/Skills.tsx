@@ -3,6 +3,7 @@ import Reveal from '../components/Reveal'
 import LogoLoop from '../components/reactbits/LogoLoop'
 import CountUp from '../components/reactbits/CountUp'
 import { skills, honors } from '../data/content'
+import { prefersReducedMotion } from '../lib/lenis'
 
 function chipRow(items: string[]) {
   return items.map((s) => ({
@@ -34,17 +35,25 @@ export default function Skills() {
             <p className="mb-3 font-mono text-xs tracking-widest text-muted uppercase">
               {row.label}
             </p>
-            <LogoLoop
-              logos={chipRow(row.items)}
-              speed={55}
-              direction={row.direction}
-              logoHeight={34}
-              gap={12}
-              pauseOnHover
-              fadeOut
-              fadeOutColor="#060A14"
-              ariaLabel={row.label}
-            />
+            {prefersReducedMotion() ? (
+              <div className="flex flex-wrap gap-3">
+                {chipRow(row.items).map((c) => (
+                  <span key={c.title}>{c.node}</span>
+                ))}
+              </div>
+            ) : (
+              <LogoLoop
+                logos={chipRow(row.items)}
+                speed={55}
+                direction={row.direction}
+                logoHeight={34}
+                gap={12}
+                pauseOnHover
+                fadeOut
+                fadeOutColor="#060A14"
+                ariaLabel={row.label}
+              />
+            )}
           </Reveal>
         ))}
       </div>

@@ -5,6 +5,7 @@ import Lazy3D from '../components/Lazy3D'
 import ScrollReveal from '../components/reactbits/ScrollReveal'
 import CountUp from '../components/reactbits/CountUp'
 import { about } from '../data/content'
+import { prefersReducedMotion } from '../lib/lenis'
 
 const MacbookScene = lazy(() => import('../three/MacbookScene'))
 
@@ -57,15 +58,21 @@ export default function About() {
 
         {/* Right: story + stats */}
         <div>
-          <ScrollReveal
-            baseOpacity={0.08}
-            blurStrength={3}
-            baseRotation={2}
-            containerClassName="!my-0"
-            textClassName="!text-[clamp(1.35rem,2.2vw,1.9rem)] !leading-snug !font-medium font-display text-text"
-          >
-            {about.paragraphs[0]}
-          </ScrollReveal>
+          {prefersReducedMotion() ? (
+            <p className="font-display text-[clamp(1.35rem,2.2vw,1.9rem)] leading-snug font-medium text-text">
+              {about.paragraphs[0]}
+            </p>
+          ) : (
+            <ScrollReveal
+              baseOpacity={0.08}
+              blurStrength={3}
+              baseRotation={2}
+              containerClassName="!my-0"
+              textClassName="!text-[clamp(1.35rem,2.2vw,1.9rem)] !leading-snug !font-medium font-display text-text"
+            >
+              {about.paragraphs[0]}
+            </ScrollReveal>
+          )}
 
           <div className="mt-8 space-y-6">
             {about.paragraphs.slice(1).map((p, i) => (

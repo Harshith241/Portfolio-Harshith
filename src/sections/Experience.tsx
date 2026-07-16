@@ -35,12 +35,18 @@ export default function Experience() {
 
   return (
     <section id="experience" className="mx-auto max-w-6xl px-6 py-32 sm:px-12">
-      <ScrollFloat
-        containerClassName="!m-0"
-        textClassName="font-display !text-4xl sm:!text-5xl lg:!text-6xl font-bold tracking-tight text-text"
-      >
-        Where I’ve built.
-      </ScrollFloat>
+      {prefersReducedMotion() ? (
+        <h2 className="font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+          Where I’ve built.
+        </h2>
+      ) : (
+        <ScrollFloat
+          containerClassName="!m-0"
+          textClassName="font-display !text-4xl sm:!text-5xl lg:!text-6xl font-bold tracking-tight text-text"
+        >
+          Where I’ve built.
+        </ScrollFloat>
+      )}
 
       <ol ref={listRef} className="relative mt-16 space-y-10 pl-8">
         {/* track + scroll-drawn thread */}

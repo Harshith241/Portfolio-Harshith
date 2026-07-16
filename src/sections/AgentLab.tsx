@@ -90,16 +90,24 @@ export default function AgentLab() {
       </Reveal>
 
       <div className="mt-10">
-        <LogoLoop
-          logos={stack}
-          speed={70}
-          logoHeight={36}
-          gap={14}
-          pauseOnHover
-          fadeOut
-          fadeOutColor="#060A14"
-          ariaLabel="Agent stack"
-        />
+        {prefersReducedMotion() ? (
+          <div className="flex flex-wrap gap-3">
+            {stack.map((c) => (
+              <span key={c.title}>{c.node}</span>
+            ))}
+          </div>
+        ) : (
+          <LogoLoop
+            logos={stack}
+            speed={70}
+            logoHeight={36}
+            gap={14}
+            pauseOnHover
+            fadeOut
+            fadeOutColor="#060A14"
+            ariaLabel="Agent stack"
+          />
+        )}
       </div>
     </section>
   )

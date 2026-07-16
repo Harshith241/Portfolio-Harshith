@@ -30,6 +30,12 @@ body {
   color: var(--color-text);
 }
 
+:focus-visible {
+  outline: 2px solid var(--color-red);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
 /* the ONE glitch effect on the page: 150ms RGB-split on the footer logo, hover only */
 @keyframes rgb-split {
   0%, 100% { text-shadow: none; transform: translate(0); }
@@ -39,6 +45,9 @@ body {
 }
 .glitch-hover:hover {
   animation: rgb-split 0.15s steps(2) 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .glitch-hover:hover { animation: none; }
 }
 
 /* easter egg: spider drops in when you reach the end of the page — click = back to top */
@@ -69,8 +78,14 @@ body {
   border: none;
   background: none;
   cursor: pointer;
-  pointer-events: auto;
+  pointer-events: none;
+  opacity: 0; /* hidden while retracted — otherwise it peeks below the 0-height thread */
+  transition: opacity 0.25s;
   animation: spider-sway 1.8s ease-in-out infinite;
+}
+.spider-down .spider-body {
+  opacity: 1;
+  pointer-events: auto;
 }
 .spider-bubble {
   position: absolute;
