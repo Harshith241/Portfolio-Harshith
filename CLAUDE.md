@@ -7,6 +7,12 @@ Dark, cinematic, scroll-driven single-page site with a **subtle** Spider-Man und
 All resume content, section-by-section specs, component choices, and build phases are there.
 Do not invent content — use `PLAN.md` §Content verbatim.
 
+**v2 IN PROGRESS on branch `feat/cinematic-intro`: scroll-triggered cinematic intro ("The Swing").**
+Spec = [PLAN-INTRO.md](PLAN-INTRO.md) (storyboard beats B1–B6, Track A graphic-novel approach chosen,
+phases I1–I5, revert = tag `v1-classic` / main untouched). Code lives in `src/intro/`. Check PROGRESS.md
+for the current I-phase before touching anything. Exception to the "no Spider-Man imagery" rule: the intro
+uses OUR original silhouette web-slinger art — still NO logos, movie stills, or the name "Spider-Man" in UI.
+
 ## Stack (locked — do not substitute)
 
 - Vite + React 19 + TypeScript + Tailwind CSS v4

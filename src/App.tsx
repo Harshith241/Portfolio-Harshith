@@ -5,6 +5,7 @@ import Nav from './components/Nav'
 import ProgressThread from './components/ProgressThread'
 import ClickSpark from './components/reactbits/ClickSpark'
 import Hero from './sections/Hero'
+import IntroSequence, { introEnabled } from './intro/IntroSequence'
 import About from './sections/About'
 import Experience from './sections/Experience'
 import Projects from './sections/Projects'
@@ -25,6 +26,7 @@ export default function App() {
       <ProgressThread />
       <main>
         <Hero />
+        {introEnabled() && <IntroSequence />}
         <About />
         <Experience />
         <Projects />

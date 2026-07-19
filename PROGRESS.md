@@ -1,6 +1,20 @@
 # PROGRESS
 
-Phase status (see PLAN.md §9 for definitions):
+## v2 — Cinematic intro (branch `feat/cinematic-intro`, spec PLAN-INTRO.md, Track A chosen)
+
+- [x] **I1 — Safety net + scaffold**: tag `v1-classic` pushed; branch pushed. `src/intro/IntroSequence.tsx`:
+  pinned h-screen stage after Hero, ScrollTrigger scrub 0.4 over +=3200px, master timeline with BEATS map
+  (thwip/swing/flip/landing/zoom/unmask fractions), placeholder layer per beat, dev-only progress HUD,
+  SKIP INTRO button + Esc (lenis jump past pin), `hv-intro-seen` sessionStorage set at completion/skip,
+  `introEnabled()` gate in App (reduced-motion or seen → not mounted = v1 flow). Hero Threads wrapper has
+  id `hero-threads`; timeline fades it out over B1 (scrub-reversible). ⚠️ Threads still mounted (GPU) while
+  transparent — unmount is an I5 perf task.
+- [ ] I2 — B1 THWIP rope canvas + B2 swing arc (Track A SVG figure) → USER CHECKPOINT (A vs B)
+- [ ] I3 — B3 flip panel + B4 landing impact FX
+- [ ] I4 — B5 zoom + mask art + B6 iris/halftone dissolve/Flip into About portrait
+- [ ] I5 — mobile pass, replay affordance, perf audit, chosen §6 amplifiers, merge decision
+
+## v1 — Phase status (see PLAN.md §9 for definitions):
 
 - [x] **Phase 1 — Scaffold**: Vite+React 19+TS+Tailwind v4, tokens in `src/index.css`, fonts in `index.html`,
   Lenis+ScrollTrigger wiring in `src/lib/lenis.ts`, all 8 section shells rendering real copy from

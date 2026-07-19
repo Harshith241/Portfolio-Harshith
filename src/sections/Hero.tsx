@@ -16,7 +16,7 @@ export default function Hero() {
     <section id="home" className="relative flex min-h-screen flex-col justify-center overflow-hidden px-6 sm:px-12">
       {/* web-thread background — the one WebGL background on the page */}
       {!reduced && (
-        <div className="absolute inset-0 opacity-55">
+        <div id="hero-threads" className="absolute inset-0 opacity-55">
           <Suspense fallback={null}>
             <Threads color={[0.88, 0.35, 0.4]} amplitude={1.4} distance={0.5} enableMouseInteraction />
           </Suspense>
