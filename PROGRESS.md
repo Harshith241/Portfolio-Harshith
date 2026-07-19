@@ -32,8 +32,31 @@
   DEV: `window.__spideyCfg` overrides CFG per-frame; `__spideyInfo` reports clips/size after load.
   Pane-verify recipe: seek → fix stage via inline style {position:fixed,top:0,...,background:'#060A14'} →
   seek again → screenshot (HMR wipes inline styles; redo after any code change).
-  → ⏸ USER CHECKPOINT: judge 3D swing by real scrolling. Then I3 (flip+landing) continues with the 3D model
-  (jump-clip early frames for the flip cut, landing crouch = jump-clip end frames or emote inspection).
+  → User verdict: scrub-driven swing felt RIGID (frozen limbs, hand not on rope, "doesn't look like
+  Spider-Man"). User asked to embed the actual TASM movie clip — declined (copyrighted footage, DMCA risk);
+  fix is real-time motion instead.
+- [~] **I2c — v3 architecture: TIME-BASED title sequence** (in progress, one regression left):
+  `IntroSequence.tsx` REWRITTEN — no more ScrollTrigger/pin/scrub. Now: fixed inset-0 z-[90] overlay
+  (transparent, vignette dims the hero beneath); first wheel/touchmove/ArrowDown at 'waiting' state calls
+  start() → lenis.stop() + plays a 6.5s gsap timeline (proxy.p 0→1, onUpdate drives the same pure
+  sceneRef.update(p, hand) + scene3dRef.update(p) contract); onComplete/skip/Esc → finish(): seen flag,
+  lenis.start(), lenis.scrollTo('#about'), overlay fades+unmounts. NEW BEATS (fractions of 6.5s):
+  thwip 0–.1, swing .1–.42, flip .42–.56, landing .56–.7, zoom .7–.88, unmask .88–1.
+  SwingScene.update(p, hand?) — rope endpoint uses `hand` (screen px) when given.
+  SwingScene3D: 'jump' action UNPAUSED (LoopPingPong, timeScale .55) + mixer.update(delta) in useFrame =
+  live fluid limbs; hand-bone found via traverse (/hand/i + left-ish regex) and projected to screen px each
+  frame → handScreen() feeds the rope. scale 1.35, +hemisphereLight.
+  ⚠️ REGRESSION TO FIX FIRST NEXT SESSION: 3D model not rendering after the v3 refactor (rope + hand
+  projection DO work — rope visibly follows a moving hand point, so Rig/useFrame runs & model is loaded;
+  no console errors; both canvases exist). Suspects, in order: (1) SwingScene.tsx constants still use OLD
+  beat fractions (SWING_START .08 / SWING_END .34 / FIGURE_IN .055 / TIP_END .05 / SPLAT_AT .045) while
+  v3 beats moved (swing .1–.42) — sync them + the p<0.38 visibility cutoffs in BOTH files; (2) g.visible
+  gating vs new fractions; (3) check group scale/pos sanity via __spideyCfg once visible.
+  Also note: hero title stays visible under the overlay during B1/B2 (vignette-dimmed) — looks intentional,
+  keep. Old scrub notes (pin-spacer, stage-fixing recipe) are OBSOLETE for v3 — overlay is already
+  viewport-fixed; just __introSeek(p) then screenshot.
+  NOT DONE from user feedback: "doesn't look like Spider-Man enough" — after regression fix, improve
+  lighting/readability (brighter fill, maybe slight camera-facing key) and consider showing him bigger.
 - [ ] I3 — B3 flip panel + B4 landing impact FX
 - [ ] I4 — B5 zoom + mask art + B6 iris/halftone dissolve/Flip into About portrait
 - [ ] I5 — mobile pass, replay affordance, perf audit, chosen §6 amplifiers, merge decision

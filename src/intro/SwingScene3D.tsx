@@ -6,6 +6,7 @@ import { swingState } from './SwingScene'
 
 export interface Swing3DHandle {
   update(p: number): void
+  handScreen(): { x: number; y: number } | null
 }
 
 const MODEL = '/models/spidey.glb'
@@ -14,7 +15,7 @@ const FOV = 40
 
 /* dev-tunable knobs: tweak live via window.__spideyCfg = {...} */
 const CFG = {
-  scale: 1.05, // model is ~1.64 world-units tall once skinned
+  scale: 1.35, // model is ~1.64 world-units tall once skinned
   rotY: -1.571, // face direction of travel (up-left toward the anchor)
   lean: 0.9, // how much of the rope angle the body takes
   offX: -0.75, // world-unit offset so the grip hand meets the rope end
@@ -23,7 +24,9 @@ const CFG = {
   animTo: 0.54,
 }
 
-function Rig({ shared }: { shared: React.MutableRefObject<{ p: number }> }) {
+function Rig({ shared, handOut }: { shared: React.MutableRefObject<{ p: number }>; handOut: React.MutableRefObject<{ x: number; y: number } | null> }) {
+  const handBone = useRef<THREE.Object3D | null>(null)
+  const v3 = useRef(new THREE.Vector3())
   const group = useRef<THREE.Group>(null)
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   const { scene, animations } = useGLTF(MODEL) as any
@@ -32,9 +35,17 @@ function Rig({ shared }: { shared: React.MutableRefObject<{ p: number }> }) {
   useEffect(() => {
     const a = actions['jump']
     if (a) {
-      a.play()
-      a.paused = true
+      a.setLoop(THREE.LoopPingPong, Infinity)
+      a.timeScale = 0.55
+      a.play() // runs live — fluid limbs, not a frozen frame
     }
+    // find the grip hand bone for rope attachment
+    let hand: THREE.Object3D | null = null
+    scene.traverse((o: THREE.Object3D) => {
+      if (!hand && (o as THREE.Bone).isBone && /hand/i.test(o.name) && /l(eft)?[_.]?|L$/.test(o.name)) hand = o
+    })
+    if (!hand) scene.traverse((o: THREE.Object3D) => { if (!hand && (o as THREE.Bone).isBone && /hand/i.test(o.name)) hand = o })
+    handBone.current = hand
     if (import.meta.env.DEV) {
       const box = new THREE.Box3().setFromObject(scene)
       const size = new THREE.Vector3()
@@ -47,9 +58,10 @@ function Rig({ shared }: { shared: React.MutableRefObject<{ p: number }> }) {
     }
   }, [actions, scene])
 
-  useFrame(({ size }) => {
+  useFrame(({ size, camera }, delta) => {
     const g = group.current
     if (!g) return
+    mixer.update(delta)
     const cfg = { ...CFG, ...(window as unknown as { __spideyCfg?: Partial<typeof CFG> }).__spideyCfg }
     const p = shared.current.p
     const s = swingState(p, size.width, size.height)
@@ -69,11 +81,14 @@ function Rig({ shared }: { shared: React.MutableRefObject<{ p: number }> }) {
     g.scale.setScalar(cfg.scale)
     scene.rotation.y = cfg.rotY
 
-    const jump = actions['jump']
-    if (jump) {
-      const dur = jump.getClip().duration
-      const t = cfg.animFrom + (cfg.animTo - cfg.animFrom) * s.st
-      mixer.setTime(t * dur)
+    // project the grip hand bone to screen px for the rope
+    if (handBone.current) {
+      handBone.current.getWorldPosition(v3.current)
+      v3.current.project(camera)
+      handOut.current = {
+        x: (v3.current.x * 0.5 + 0.5) * size.width,
+        y: (1 - (v3.current.y * 0.5 + 0.5)) * size.height,
+      }
     }
   })
 
@@ -87,11 +102,15 @@ function Rig({ shared }: { shared: React.MutableRefObject<{ p: number }> }) {
 /** Track B figure: rigged Spider-Verse Miles scrubbed along the same pendulum. */
 const SwingScene3D = forwardRef<Swing3DHandle>(function SwingScene3D(_, ref) {
   const shared = useRef({ p: 0 })
+  const handOut = useRef<{ x: number; y: number } | null>(null)
 
   useImperativeHandle(ref, () => ({
     update(p: number) {
       shared.current.p = p
       invalidate()
+    },
+    handScreen() {
+      return handOut.current
     },
   }))
 
@@ -104,11 +123,12 @@ const SwingScene3D = forwardRef<Swing3DHandle>(function SwingScene3D(_, ref) {
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         className="!h-full !w-full"
       >
-        <ambientLight intensity={0.9} />
+        <ambientLight intensity={1.25} />
+        <hemisphereLight intensity={0.6} color="#8A94A8" groundColor="#1C2536" />
         <directionalLight position={[4, 6, 8]} intensity={1.6} />
         <pointLight position={[-6, 2, 4]} intensity={30} color="#E63946" />
         <Suspense fallback={null}>
-          <Rig shared={shared} />
+          <Rig shared={shared} handOut={handOut} />
         </Suspense>
       </Canvas>
     </div>

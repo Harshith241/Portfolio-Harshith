@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react'
 
 export interface SwingSceneHandle {
-  update(p: number): void
+  update(p: number, hand?: { x: number; y: number } | null): void
 }
 
 /* beat fractions (must match IntroSequence BEATS) */
@@ -40,7 +40,7 @@ const SwingScene = forwardRef<SwingSceneHandle, { showFigure?: boolean }>(functi
   const trail = useRef<{ x: number; y: number }[]>([])
 
   useImperativeHandle(ref, () => ({
-    update(p: number) {
+    update(p: number, hand?: { x: number; y: number } | null) {
       const root = rootRef.current
       const canvas = canvasRef.current
       const figure = figureRef.current
@@ -66,7 +66,8 @@ const SwingScene = forwardRef<SwingSceneHandle, { showFigure?: boolean }>(functi
         return
       }
 
-      const { A, st, theta, H } = swingState(p, w, h)
+      const { A, st, theta, H: Hp } = swingState(p, w, h)
+      const H = hand ?? Hp // rope glues to the 3D hand bone when available
 
       // ---- B1: web tip shoots to the corner ----
       if (p < TIP_END) {
