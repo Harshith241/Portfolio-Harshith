@@ -9,7 +9,16 @@
   `introEnabled()` gate in App (reduced-motion or seen → not mounted = v1 flow). Hero Threads wrapper has
   id `hero-threads`; timeline fades it out over B1 (scrub-reversible). ⚠️ Threads still mounted (GPU) while
   transparent — unmount is an I5 perf task.
-- [ ] I2 — B1 THWIP rope canvas + B2 swing arc (Track A SVG figure) → USER CHECKPOINT (A vs B)
+- [x] **I2 — B1 THWIP + B2 SWING** (`src/intro/SwingScene.tsx`): one 2D canvas (web tip shoots br→top-left
+  corner along a bezier, 7-strand frayed splat + red node with overshoot wobble, rope anchor→hand with sag,
+  red fading motion trail) + DOM/SVG silhouette figure (stroked-tube limbs, head w/ white eye wedge, red
+  spine accent, red drop-shadow rim; grip point local (64,4), rotated to rope angle θ). Pendulum: anchor
+  (0.1w,0.07h), R=0.78h, θ 78°→-6°, ease t^1.65 (accelerates into the bottom); figure fades in at entry
+  (mid-right, "leapt from off-frame" cheat — rope shorter than screen so off-screen entry is impossible).
+  Everything pure f(progress) → reverse-scrub replays backwards. Vignette + "thwip!" card in the timeline.
+  DEV: `window.__introSeek(0..1)` (disables ST first; NOTE: first call after load can hit a zero-size reflow
+  — call twice; sweep a loop of seeks to build the trail). Rope/figure cut out over p 0.34→0.38.
+  → ⏸ USER CHECKPOINT pending: judge the swing feel by real scrolling; decide Track A stays vs try Track B (3D).
 - [ ] I3 — B3 flip panel + B4 landing impact FX
 - [ ] I4 — B5 zoom + mask art + B6 iris/halftone dissolve/Flip into About portrait
 - [ ] I5 — mobile pass, replay affordance, perf audit, chosen §6 amplifiers, merge decision

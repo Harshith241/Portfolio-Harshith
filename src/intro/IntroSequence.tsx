@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { getLenis, prefersReducedMotion } from '../lib/lenis'
+import SwingScene, { type SwingSceneHandle } from './SwingScene'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -31,6 +32,7 @@ export default function IntroSequence() {
   const stageRef = useRef<HTMLDivElement>(null)
   const hudRef = useRef<HTMLDivElement>(null)
   const stRef = useRef<ScrollTrigger | null>(null)
+  const sceneRef = useRef<SwingSceneHandle>(null)
   const [done, setDone] = useState(false)
 
   useEffect(() => {
@@ -54,6 +56,15 @@ export default function IntroSequence() {
       const threads = document.getElementById('hero-threads')
       if (threads) tl.to(threads, { autoAlpha: 0, duration: BEATS.thwip[1] }, 0)
 
+      // ---- B1 dressing: vignette darkens in, THWIP card pops at web impact ----
+      const vignette = stage.querySelector('[data-fx="vignette"]')
+      if (vignette) tl.fromTo(vignette, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.06 }, 0)
+      const card = stage.querySelector('[data-fx="thwip"]')
+      if (card) {
+        tl.fromTo(card, { autoAlpha: 0, scale: 0.5, rotate: -10 }, { autoAlpha: 1, scale: 1, rotate: -6, duration: 0.012 }, 0.045)
+        tl.to(card, { autoAlpha: 0, scale: 1.15, duration: 0.015 }, 0.07)
+      }
+
       stRef.current = ScrollTrigger.create({
         trigger: section,
         start: 'top top',
@@ -62,6 +73,7 @@ export default function IntroSequence() {
         scrub: 0.4,
         animation: tl,
         onUpdate: (self) => {
+          sceneRef.current?.update(self.progress)
           if (hudRef.current) {
             const beat =
               (Object.entries(BEATS).find(([, [a, b]]) => self.progress >= a && self.progress < b)?.[0] ??
@@ -74,6 +86,16 @@ export default function IntroSequence() {
           }
         },
       })
+
+      if (import.meta.env.DEV) {
+        // headless verification: __introSeek(0..1) poses the whole sequence
+        // (disables the ScrollTrigger so live scroll events can't stomp the pose)
+        ;(window as unknown as Record<string, unknown>).__introSeek = (p: number) => {
+          stRef.current?.disable(false)
+          tl.progress(p)
+          sceneRef.current?.update(p)
+        }
+      }
     }, section)
 
     return () => ctx.revert()
@@ -104,8 +126,25 @@ export default function IntroSequence() {
   return (
     <section ref={sectionRef} aria-label="Cinematic intro: a web-slinger swings in, lands, and unmasks to reveal Harshith">
       <div ref={stageRef} className="relative h-screen w-full overflow-hidden">
-        {/* ---- I1 placeholder layers, one per beat ---- */}
-        {(Object.keys(BEATS) as (keyof typeof BEATS)[]).map((k) => (
+        {/* cinematic vignette (B1 onward) */}
+        <div
+          data-fx="vignette"
+          className="invisible absolute inset-0 opacity-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(2,4,10,0.55)_100%)]"
+        />
+
+        {/* B1+B2: web rope + swinging figure */}
+        <SwingScene ref={sceneRef} />
+
+        {/* THWIP onomatopoeia card at the anchor */}
+        <div
+          data-fx="thwip"
+          className="invisible absolute top-[11%] left-[13%] opacity-0 rounded-md bg-red px-3 py-1 font-display text-2xl font-bold tracking-wide text-bg select-none"
+        >
+          thwip!
+        </div>
+
+        {/* ---- placeholder layers for beats still to build (I3-I4) ---- */}
+        {(['flip', 'landing', 'zoom', 'unmask'] as (keyof typeof BEATS)[]).map((k) => (
           <div
             key={k}
             data-beat={k}
