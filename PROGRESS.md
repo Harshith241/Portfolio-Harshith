@@ -18,7 +18,22 @@
   Everything pure f(progress) → reverse-scrub replays backwards. Vignette + "thwip!" card in the timeline.
   DEV: `window.__introSeek(0..1)` (disables ST first; NOTE: first call after load can hit a zero-size reflow
   — call twice; sweep a loop of seeks to build the trail). Rope/figure cut out over p 0.34→0.38.
-  → ⏸ USER CHECKPOINT pending: judge the swing feel by real scrolling; decide Track A stays vs try Track B (3D).
+  → User saw Track A, wanted Track B.
+- [x] **I2b — Track B (3D swing figure)**: model = rigged Spider-Verse Miles Morales from
+  github.com/ayman-studio/diimensions (fan asset, credit in README at I5), optimized 2.9MB→1.54MB draco →
+  `public/models/spidey.glb`; clips: idle/jump/run/walk/emote1-3/tpose (~1.64 world-units tall skinned —
+  bbox lies, it's tiny pre-skin). `src/intro/SwingScene3D.tsx`: R3F canvas overlay, `Rig` (MUST stay inside
+  <Suspense> — without it the canvas mounts nothing, silently), useAnimations 'jump' played+paused,
+  mixer.setTime scrubbed over animFrom→animTo as swing progresses; group positioned via shared `swingState`
+  px→world mapping (cam z=8 fov40), rotation.z=-θ*lean, scene.rotation.y=rotY (applied per-frame so it's
+  live-tunable). Tuned CFG: scale 1.05, rotY -1.571, offX -0.75, offY -0.55, anim window 0.44–0.54 —
+  rope ends at his grip hand, he leans back facing the anchor. `IntroSequence` has `FIGURE: 'svg'|'3d'`
+  toggle (= '3d'); SwingScene keeps rope/splat/trail always, `showFigure` hides the SVG figure.
+  DEV: `window.__spideyCfg` overrides CFG per-frame; `__spideyInfo` reports clips/size after load.
+  Pane-verify recipe: seek → fix stage via inline style {position:fixed,top:0,...,background:'#060A14'} →
+  seek again → screenshot (HMR wipes inline styles; redo after any code change).
+  → ⏸ USER CHECKPOINT: judge 3D swing by real scrolling. Then I3 (flip+landing) continues with the 3D model
+  (jump-clip early frames for the flip cut, landing crouch = jump-clip end frames or emote inspection).
 - [ ] I3 — B3 flip panel + B4 landing impact FX
 - [ ] I4 — B5 zoom + mask art + B6 iris/halftone dissolve/Flip into About portrait
 - [ ] I5 — mobile pass, replay affordance, perf audit, chosen §6 amplifiers, merge decision

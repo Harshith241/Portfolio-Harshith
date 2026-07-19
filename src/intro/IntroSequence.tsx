@@ -3,6 +3,10 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { getLenis, prefersReducedMotion } from '../lib/lenis'
 import SwingScene, { type SwingSceneHandle } from './SwingScene'
+import SwingScene3D, { type Swing3DHandle } from './SwingScene3D'
+
+/** Track A ('svg') vs Track B ('3d') figure for the swing beat */
+const FIGURE: 'svg' | '3d' = '3d'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -33,6 +37,7 @@ export default function IntroSequence() {
   const hudRef = useRef<HTMLDivElement>(null)
   const stRef = useRef<ScrollTrigger | null>(null)
   const sceneRef = useRef<SwingSceneHandle>(null)
+  const scene3dRef = useRef<Swing3DHandle>(null)
   const [done, setDone] = useState(false)
 
   useEffect(() => {
@@ -74,6 +79,7 @@ export default function IntroSequence() {
         animation: tl,
         onUpdate: (self) => {
           sceneRef.current?.update(self.progress)
+          scene3dRef.current?.update(self.progress)
           if (hudRef.current) {
             const beat =
               (Object.entries(BEATS).find(([, [a, b]]) => self.progress >= a && self.progress < b)?.[0] ??
@@ -94,6 +100,7 @@ export default function IntroSequence() {
           stRef.current?.disable(false)
           tl.progress(p)
           sceneRef.current?.update(p)
+          scene3dRef.current?.update(p)
         }
       }
     }, section)
@@ -132,8 +139,9 @@ export default function IntroSequence() {
           className="invisible absolute inset-0 opacity-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(2,4,10,0.55)_100%)]"
         />
 
-        {/* B1+B2: web rope + swinging figure */}
-        <SwingScene ref={sceneRef} />
+        {/* B1+B2: web rope + swinging figure (rope always canvas; figure per track) */}
+        <SwingScene ref={sceneRef} showFigure={FIGURE === 'svg'} />
+        {FIGURE === '3d' && <SwingScene3D ref={scene3dRef} />}
 
         {/* THWIP onomatopoeia card at the anchor */}
         <div

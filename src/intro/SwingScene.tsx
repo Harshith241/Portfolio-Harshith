@@ -14,12 +14,26 @@ const SWING_END = 0.34
 const THETA0 = (78 * Math.PI) / 180 // entry: rope nearly horizontal (the reference shot)
 const THETA1 = (-6 * Math.PI) / 180 // release just past the bottom of the arc
 
+
+/** shared pendulum/beat math — single source for SVG and 3D figures */
+export function swingState(p: number, w: number, h: number) {
+  const A = { x: 0.1 * w, y: 0.07 * h }
+  const R = 0.78 * h
+  const st = Math.min(Math.max((p - SWING_START) / (SWING_END - SWING_START), 0), 1)
+  const eased = Math.pow(st, 1.65)
+  const theta = p < SWING_START ? THETA0 : THETA0 + (THETA1 - THETA0) * eased
+  const H = { x: A.x + R * Math.sin(theta), y: A.y + R * Math.cos(theta) }
+  const ropeAlpha = p < SWING_END ? 1 : Math.max(0, 1 - (p - SWING_END) / 0.04)
+  const figIn = Math.min(Math.max((p - FIGURE_IN) / 0.03, 0), 1)
+  return { A, R, st, theta, H, ropeAlpha, figIn }
+}
+
 /**
  * B1 THWIP + B2 SWING. One 2D canvas (rope, splat, trail) + a DOM/SVG figure
  * transformed along the pendulum arc. Everything is a pure function of scrub
  * progress p, so reverse-scrubbing replays it backwards for free.
  */
-const SwingScene = forwardRef<SwingSceneHandle>(function SwingScene(_, ref) {
+const SwingScene = forwardRef<SwingSceneHandle, { showFigure?: boolean }>(function SwingScene({ showFigure = true }, ref) {
   const rootRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const figureRef = useRef<HTMLDivElement>(null)
@@ -52,14 +66,7 @@ const SwingScene = forwardRef<SwingSceneHandle>(function SwingScene(_, ref) {
         return
       }
 
-      const A = { x: 0.1 * w, y: 0.07 * h } // web anchor: top-left corner
-      const R = 0.78 * h
-
-      // ---- pendulum state ----
-      const st = Math.min(Math.max((p - SWING_START) / (SWING_END - SWING_START), 0), 1)
-      const eased = Math.pow(st, 1.65) // accelerates into the bottom of the arc
-      const theta = p < SWING_START ? THETA0 : THETA0 + (THETA1 - THETA0) * eased
-      const H = { x: A.x + R * Math.sin(theta), y: A.y + R * Math.cos(theta) }
+      const { A, st, theta, H } = swingState(p, w, h)
 
       // ---- B1: web tip shoots to the corner ----
       if (p < TIP_END) {
@@ -153,7 +160,7 @@ const SwingScene = forwardRef<SwingSceneHandle>(function SwingScene(_, ref) {
 
       // ---- figure on the rope ----
       const fig = Math.min(Math.max((p - FIGURE_IN) / 0.03, 0), 1)
-      figure.style.opacity = String(fig * ropeAlpha)
+      figure.style.opacity = showFigure ? String(fig * ropeAlpha) : '0'
       const scale = (0.22 * h) / 160
       const grip = { x: 64 * scale, y: 4 * scale }
       const deg = (theta * 180) / Math.PI
