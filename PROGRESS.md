@@ -35,7 +35,7 @@
   → User verdict: scrub-driven swing felt RIGID (frozen limbs, hand not on rope, "doesn't look like
   Spider-Man"). User asked to embed the actual TASM movie clip — declined (copyrighted footage, DMCA risk);
   fix is real-time motion instead.
-- [~] **I2c — v3 architecture: TIME-BASED title sequence** (in progress, one regression left):
+- [x] **I2c — v3 architecture: TIME-BASED title sequence** (regression FIXED — see I2d):
   `IntroSequence.tsx` REWRITTEN — no more ScrollTrigger/pin/scrub. Now: fixed inset-0 z-[90] overlay
   (transparent, vignette dims the hero beneath); first wheel/touchmove/ArrowDown at 'waiting' state calls
   start() → lenis.stop() + plays a 6.5s gsap timeline (proxy.p 0→1, onUpdate drives the same pure
@@ -46,20 +46,51 @@
   SwingScene3D: 'jump' action UNPAUSED (LoopPingPong, timeScale .55) + mixer.update(delta) in useFrame =
   live fluid limbs; hand-bone found via traverse (/hand/i + left-ish regex) and projected to screen px each
   frame → handScreen() feeds the rope. scale 1.35, +hemisphereLight.
-  ⚠️ REGRESSION TO FIX FIRST NEXT SESSION: 3D model not rendering after the v3 refactor (rope + hand
-  projection DO work — rope visibly follows a moving hand point, so Rig/useFrame runs & model is loaded;
-  no console errors; both canvases exist). Suspects, in order: (1) SwingScene.tsx constants still use OLD
-  beat fractions (SWING_START .08 / SWING_END .34 / FIGURE_IN .055 / TIP_END .05 / SPLAT_AT .045) while
-  v3 beats moved (swing .1–.42) — sync them + the p<0.38 visibility cutoffs in BOTH files; (2) g.visible
-  gating vs new fractions; (3) check group scale/pos sanity via __spideyCfg once visible.
-  Also note: hero title stays visible under the overlay during B1/B2 (vignette-dimmed) — looks intentional,
-  keep. Old scrub notes (pin-spacer, stage-fixing recipe) are OBSOLETE for v3 — overlay is already
-  viewport-fixed; just __introSeek(p) then screenshot.
-  NOT DONE from user feedback: "doesn't look like Spider-Man enough" — after regression fix, improve
-  lighting/readability (brighter fill, maybe slight camera-facing key) and consider showing him bigger.
-- [ ] I3 — B3 flip panel + B4 landing impact FX
-- [ ] I4 — B5 zoom + mask art + B6 iris/halftone dissolve/Flip into About portrait
-- [ ] I5 — mobile pass, replay affordance, perf audit, chosen §6 amplifiers, merge decision
+  Old scrub notes (pin-spacer, stage-fixing recipe) are OBSOLETE for v3 — overlay is viewport-fixed;
+  just __introSeek(p) then screenshot. Hero title stays visible under the overlay during B1/B2
+  (vignette-dimmed) — intentional, keep.
+- [x] **I2d — regression root cause + fix**: model never rendered because drei's useGLTF loads the DRACO
+  decoder from a gstatic.com CDN — blocked in the embedded pane (and a 3rd-party dep in prod) → GLB decode
+  promise never resolves → Suspense pends forever, silently. Fix: decoder copied to `public/draco/`
+  (from three/examples/jsm/libs/draco/gltf/) + `useGLTF(MODEL, '/draco/')` + same for preload. The
+  "rope follows hand" observation was a red herring (rope falls back to swingState math when handOut is
+  null). Beat fractions in SwingScene.tsx synced to v3 BEATS (now in `src/intro/beats.ts` — was a TDZ
+  import-cycle risk in IntroSequence). Figure scale → 1.6 (user wanted him bigger/clearer).
+- [x] **I3 — B3 flip + B4 landing** (`FxLayer.tsx` + extended `SwingScene3D`): hard cut at .42 (white
+  flash, panel bg → 94% opaque, city-glow parallax blobs), 3D figure does a 720° tucked flip on a parabola
+  (scene.position.y=-0.82 recenters the feet-origin model so it tumbles around its body). Landing .56:
+  second flash, crouch HELD via `a.time = crouchT (2.2s of 'jump'); mixer.update(0)` (NOTE: paused
+  actions ignore mixer.setTime — set action.time directly), camera shake (decaying sine on shake wrapper),
+  elliptical shockwave rings (white+red), 8 seeded jagged web-crack lines, 14 dust motes. All pure f(p).
+- [x] **I4 — B5 zoom + B6 unmask** (`UnmaskMorph.tsx`): our mask SVG (navy head, faint web threads,
+  angular teardrop eyes w/ thin red rims — NO logos) fades in over the landed figure's head (3D exits at
+  .74), scales 1→10.5 anchored on the RIGHT eye (transform-origin = eye, eye pos lerps head→viewport
+  center, ease t^2.2). Unmask .88–1: white iris clip-path circle grows from inside the eye white to
+  cover screen; headshot dissolves in via CSS mask halftone dots (--dot 1→13px on a 16px tile), full
+  color per the no-B&W rule. onComplete → finish(true): lenis scrollTo #about (.9s) then **gsap Flip.fit**
+  shrinks the fullscreen photo INTO `#about-portrait` (the About card img) while the white fades — then
+  overlay unmounts. ⚠️ The flip is TIMED (gsap.delayedCall .95) not scroll-onComplete: an interrupted
+  lenis scroll never fires onComplete and would strand the fullscreen photo.
+- [x] **I5 — polish/perf/mobile**: IntroSequence now `React.lazy` in App (+`introEnabled` moved to
+  beats.ts) → eager JS back to ~174 KB gz (index 123 + lenis 51); three/drei (254 KB gz, shared with
+  Macbook/Guitar) + intro chunk (16 KB) stream in post-paint. Threads NOT unmounted during intro
+  (hero is on-screen anyway = v1 GPU baseline) but finish() clearProps-restores its opacity — the B1
+  fade used to stick forever (bug). Replay: `hv-intro-done`/`hv-intro-replay` window events; Hero shows
+  "▶ replay intro" under the SCROLL cue once seen; App listens for replay → clears flag, scrolls top,
+  remounts IntroSequence via key. Mobile 375px: pendulum R clamped `min(.78h, .88w)` + 3D swing
+  scale/offsets × (R/.78h) — otherwise the arc swings off-screen right; flip/landing/zoom verified at
+  375px as-is. Full real-time playthrough verified (wheel → 6.5s → About + Flip + unmount + replay btn).
+  Build green. §6 amplifiers: NONE built — user never picked; ask before merge.
+- [ ] Merge decision (user's move) + Vercel preview check on the branch URL
+  ⚠️ Browser-pane verification notes for future sessions: (1) after every reload the pane is 0×0 and
+  rAF is DEAD until a screenshot forces rasterization — screenshot first, THEN seek (seeks before layout
+  size the rope canvas at 0). (2) gsap seeks to the same progress are no-ops — seek to a nearby value
+  first. (3) adding a new dep import (e.g. gsap/Flip) makes vite re-optimize deps → the ?v= hash changes
+  → any console `import()` probe of an OLD hash URL gets a SECOND gsap instance with an empty
+  globalTimeline (looks like "timeline not running" — it isn't; check
+  `performance.getEntriesByType('resource')` for the current hash). (4) to run the timeline for real
+  despite dead rAF: `setInterval(() => gsap.ticker.tick(), 16)` INSIDE one javascript_tool call
+  (timers die between calls). (5) SwingScene3D has a DEV-only `advance()` per update for the same reason.
 
 ## v1 — Phase status (see PLAN.md §9 for definitions):
 

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import SplitText from '../components/reactbits/SplitText'
 import RotatingText from '../components/reactbits/RotatingText'
 import ShinyText from '../components/reactbits/ShinyText'
@@ -11,6 +11,18 @@ const Threads = lazy(() => import('../components/reactbits/Threads'))
 
 export default function Hero() {
   const reduced = prefersReducedMotion()
+  const [introSeen, setIntroSeen] = useState(false)
+
+  useEffect(() => {
+    const upd = () => setIntroSeen(!!sessionStorage.getItem('hv-intro-seen'))
+    upd()
+    window.addEventListener('hv-intro-done', upd)
+    window.addEventListener('hv-intro-replay', upd)
+    return () => {
+      window.removeEventListener('hv-intro-done', upd)
+      window.removeEventListener('hv-intro-replay', upd)
+    }
+  }, [])
 
   return (
     <section id="home" className="relative flex min-h-screen flex-col justify-center overflow-hidden px-6 sm:px-12">
@@ -88,6 +100,15 @@ export default function Hero() {
       <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
         <span className="font-mono text-xs tracking-widest text-muted">SCROLL</span>
         <span className="h-6 w-px animate-pulse bg-red" />
+        {!reduced && introSeen && (
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event('hv-intro-replay'))}
+            className="cursor-pointer font-mono text-xs text-muted transition hover:text-red"
+          >
+            ▶ replay intro
+          </button>
+        )}
       </div>
     </section>
   )

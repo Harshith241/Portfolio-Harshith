@@ -4,12 +4,13 @@ export interface SwingSceneHandle {
   update(p: number, hand?: { x: number; y: number } | null): void
 }
 
-/* beat fractions (must match IntroSequence BEATS) */
-const TIP_END = 0.05 // web tip reaches the corner
-const SPLAT_AT = 0.045
-const FIGURE_IN = 0.055
-const SWING_START = 0.08
-const SWING_END = 0.34
+/* beat fractions (must match IntroSequence BEATS: thwip 0–.1, swing .1–.42) */
+const TIP_END = 0.062 // web tip reaches the corner
+const SPLAT_AT = 0.056
+const FIGURE_IN = 0.07
+const SWING_START = 0.1
+const SWING_END = 0.42
+export const SWING_FADED = SWING_END + 0.015 // hard cut into the flip panel (flash hides it)
 
 const THETA0 = (78 * Math.PI) / 180 // entry: rope nearly horizontal (the reference shot)
 const THETA1 = (-6 * Math.PI) / 180 // release just past the bottom of the arc
@@ -18,12 +19,12 @@ const THETA1 = (-6 * Math.PI) / 180 // release just past the bottom of the arc
 /** shared pendulum/beat math — single source for SVG and 3D figures */
 export function swingState(p: number, w: number, h: number) {
   const A = { x: 0.1 * w, y: 0.07 * h }
-  const R = 0.78 * h
+  const R = Math.min(0.78 * h, 0.88 * w) // width clamp keeps the arc on narrow screens
   const st = Math.min(Math.max((p - SWING_START) / (SWING_END - SWING_START), 0), 1)
   const eased = Math.pow(st, 1.65)
   const theta = p < SWING_START ? THETA0 : THETA0 + (THETA1 - THETA0) * eased
   const H = { x: A.x + R * Math.sin(theta), y: A.y + R * Math.cos(theta) }
-  const ropeAlpha = p < SWING_END ? 1 : Math.max(0, 1 - (p - SWING_END) / 0.04)
+  const ropeAlpha = p < SWING_END ? 1 : Math.max(0, 1 - (p - SWING_END) / 0.015)
   const figIn = Math.min(Math.max((p - FIGURE_IN) / 0.03, 0), 1)
   return { A, R, st, theta, H, ropeAlpha, figIn }
 }
@@ -59,8 +60,8 @@ const SwingScene = forwardRef<SwingSceneHandle, { showFigure?: boolean }>(functi
       ctx.clearRect(0, 0, w, h)
 
       // scene is over after the swing (B3+ are cuts)
-      const ropeAlpha = p < SWING_END ? 1 : Math.max(0, 1 - (p - SWING_END) / 0.04)
-      if (p >= SWING_END + 0.06 || ropeAlpha <= 0) {
+      const ropeAlpha = p < SWING_END ? 1 : Math.max(0, 1 - (p - SWING_END) / 0.015)
+      if (p >= SWING_FADED || ropeAlpha <= 0) {
         figure.style.opacity = '0'
         trail.current = []
         return
@@ -172,7 +173,7 @@ const SwingScene = forwardRef<SwingSceneHandle, { showFigure?: boolean }>(functi
   }))
 
   return (
-    <div ref={rootRef} className="pointer-events-none absolute inset-0">
+    <div ref={rootRef} className="pointer-events-none absolute inset-0 z-10">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <div ref={figureRef} className="absolute top-0 left-0 opacity-0 will-change-transform">
         {/* the web-slinger — original silhouette art */}

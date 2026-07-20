@@ -25,6 +25,7 @@ export default function About() {
           <Reveal>
             <figure className="group relative overflow-hidden rounded-2xl border border-border bg-surface">
               <img
+                id="about-portrait"
                 src="/images/headshot-card.jpg"
                 alt="Harshith Vijayan"
                 className="w-full object-cover transition duration-500 group-hover:scale-[1.02]"
