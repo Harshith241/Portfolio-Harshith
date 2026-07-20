@@ -62,7 +62,7 @@
   second flash, crouch HELD via `a.time = crouchT (2.2s of 'jump'); mixer.update(0)` (NOTE: paused
   actions ignore mixer.setTime — set action.time directly), camera shake (decaying sine on shake wrapper),
   elliptical shockwave rings (white+red), 8 seeded jagged web-crack lines, 14 dust motes. All pure f(p).
-- [x] **I4 — B5 zoom + B6 unmask** (`UnmaskMorph.tsx`): our mask SVG (navy head, faint web threads,
+- [x] **I4 — B5 zoom + B6 unmask** (SUPERSEDED by I4b below — the mask-SVG beat is GONE): our mask SVG (navy head, faint web threads,
   angular teardrop eyes w/ thin red rims — NO logos) fades in over the landed figure's head (3D exits at
   .74), scales 1→10.5 anchored on the RIGHT eye (transform-origin = eye, eye pos lerps head→viewport
   center, ease t^2.2). Unmask .88–1: white iris clip-path circle grows from inside the eye white to
@@ -80,8 +80,34 @@
   remounts IntroSequence via key. Mobile 375px: pendulum R clamped `min(.78h, .88w)` + 3D swing
   scale/offsets × (R/.78h) — otherwise the arc swings off-screen right; flip/landing/zoom verified at
   375px as-is. Full real-time playthrough verified (wheel → 6.5s → About + Flip + unmount + replay btn).
-  Build green. §6 amplifiers: NONE built — user never picked; ask before merge.
-- [ ] Merge decision (user's move) + Vercel preview check on the branch URL
+  Build green. §6 amplifiers: built in the I4b pass below.
+- [x] **I4b — user-feedback rework** ("mask→headshot transition bad; spiderman looks basic/ripped off"):
+  (a) SILHOUETTE TREATMENT (`SwingScene3D`): materials replaced keyed on MESH names (material names die
+  after the 1st pass/HMR — guard `userData.hvTreated`): Object_9/13 = eye lenses → unlit white
+  MeshBasicMaterial (glow through dark), Object_7/11/16 → brand-red standard, body → #101828 navy.
+  Lighting: ambient .5 / hemi .35 / key .9 / red rim 45 / blue kick 14. Scale 1.6. Reads as OUR
+  silhouette art now, not the Miles asset.
+  (b) B5 = REAL 3D DOLLY, no 2D mask art: crouch held through zoom, "the look" = scene.rotY turn to
+  camera + head-bone tilt `crouchHeadX + headTilt(0.7) * look` — ABSOLUTE set, base captured ONCE
+  (euler is never synced back from mixer quaternion writes; += or re-capture accumulates across
+  frames/seeks). zoomScale 9 anchored on the head bone, anchor target drifts DOWN (+0.22h·ez) because
+  the bone is at the neck and the face rises as scale grows. Eyes stay in frame at full zoom.
+  ⚠️ Determinism bugs fixed: (1) frozen pose now `a.reset(); a.time = crouchT(0.15); mixer.update(1/240)`
+  every frame — update(0) doesn't re-evaluate AND LoopPingPong loop-parity from the live phase mirrored
+  the held frame wall-clock-dependently; (2) crouchT retuned 2.2→0.15 (real crouch, was a run pose).
+  (c) `UnmaskMorph` rewritten: closing vignette over the dolly, then B6 iris = white circle clip-path
+  bloom from the PROJECTED head point (`headScreen()`, eyeAnchor knob kept at [0,0,0] — bone-local
+  lens solves proved seek-order-sensitive, mid-face reads fine; origin frozen at first unmask frame so
+  the bloom doesn't chase the figure), halftone-dissolve headshot with 1.07→1 settle, Flip handoff
+  unchanged. 3D figure lingers to p<.93 (FIG_OUT) behind the growing iris.
+  (d) §6 AMPLIFIERS (all cheap; #6 letter-tug skipped): 1) `WebDivider.tsx` between all 6 section pairs
+  (1px thread + 6-strand splat node, scale-in w/ overshoot on full intersection, `at` prop varies spot,
+  reduced-motion = static); 2) `CornerWeb` in Projects grid cards (quarter web SVG top-right, 8% opacity
+  on hover); 3) ClickSpark tips fork into micro web-Vs (branch = lineLength/2); 4) loader dot swings in
+  on a red thread (CSS keyframes, thread fades at settle); 5) typing "thwip" → `hv-intro-replay`
+  (App keydown buffer; ignores inputs/meta keys/reduced-motion). Build green (tsc + vite, 124 KB gz main).
+- [ ] Merge decision (user's move) + Vercel preview check on the branch URL. Re-verify the full
+  swing→flip→landing→zoom→iris flow in a REAL browser (pane rasterization can't show the scroll handoff).
   ⚠️ Browser-pane verification notes for future sessions: (1) after every reload the pane is 0×0 and
   rAF is DEAD until a screenshot forces rasterization — screenshot first, THEN seek (seeks before layout
   size the rope canvas at 0). (2) gsap seeks to the same progress are no-ops — seek to a nearby value

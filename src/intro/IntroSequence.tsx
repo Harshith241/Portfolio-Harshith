@@ -80,7 +80,7 @@ export default function IntroSequence() {
         sceneRef.current?.update(p, scene3dRef.current?.handScreen() ?? null)
         scene3dRef.current?.update(p)
         fxRef.current?.update(p, shakeRef.current)
-        unmaskRef.current?.update(p)
+        unmaskRef.current?.update(p, scene3dRef.current?.headScreen() ?? null)
         if (hudRef.current) hudRef.current.textContent = `INTRO ${(p * 100).toFixed(0)}%`
       },
     })

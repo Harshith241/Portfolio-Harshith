@@ -5,6 +5,7 @@ import Loader from './components/Loader'
 import Nav from './components/Nav'
 import ProgressThread from './components/ProgressThread'
 import ClickSpark from './components/reactbits/ClickSpark'
+import WebDivider from './components/WebDivider'
 import Hero from './sections/Hero'
 import About from './sections/About'
 import Experience from './sections/Experience'
@@ -29,7 +30,20 @@ export default function App() {
       setIntroKey((k) => k + 1) // remount IntroSequence in its 'waiting' state
     }
     window.addEventListener('hv-intro-replay', onReplay)
-    return () => window.removeEventListener('hv-intro-replay', onReplay)
+    // §6 amplifier 5: typing "thwip" anywhere replays the intro
+    let buf = ''
+    const onType = (e: KeyboardEvent) => {
+      if (e.key.length !== 1 || e.metaKey || e.ctrlKey) return
+      const t = e.target as HTMLElement
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      buf = (buf + e.key.toLowerCase()).slice(-5)
+      if (buf === 'thwip' && !prefersReducedMotion()) window.dispatchEvent(new Event('hv-intro-replay'))
+    }
+    window.addEventListener('keydown', onType)
+    return () => {
+      window.removeEventListener('hv-intro-replay', onReplay)
+      window.removeEventListener('keydown', onType)
+    }
   }, [])
 
   return (
@@ -45,10 +59,15 @@ export default function App() {
           </Suspense>
         )}
         <About />
+        <WebDivider at="30%" />
         <Experience />
+        <WebDivider at="64%" />
         <Projects />
+        <WebDivider at="22%" />
         <AgentLab />
+        <WebDivider at="72%" />
         <Skills />
+        <WebDivider at="40%" />
         <BeyondCode />
         <Contact />
       </main>

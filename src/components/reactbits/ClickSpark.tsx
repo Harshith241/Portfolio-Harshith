@@ -119,6 +119,18 @@ const ClickSpark: React.FC<ClickSparkProps> = ({
         ctx.lineTo(x2, y2);
         ctx.stroke();
 
+        // micro web-line: fork the tip into a tiny V (theme amplifier)
+        const branch = lineLength * 0.5;
+        if (branch > 0.5) {
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 + branch * Math.cos(spark.angle + 0.55), y2 + branch * Math.sin(spark.angle + 0.55));
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 + branch * Math.cos(spark.angle - 0.55), y2 + branch * Math.sin(spark.angle - 0.55));
+          ctx.stroke();
+        }
+
         return true;
       });
 

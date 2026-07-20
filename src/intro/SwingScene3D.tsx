@@ -7,6 +7,8 @@ import { swingState, SWING_FADED } from './SwingScene'
 export interface Swing3DHandle {
   update(p: number): void
   handScreen(): { x: number; y: number } | null
+  /** projected mask-eye point — the B6 iris origin */
+  headScreen(): { x: number; y: number } | null
 }
 
 const MODEL = '/models/spidey.glb'
@@ -27,17 +29,36 @@ const CFG = {
   landX: 0, // world offset of the landing pose from bottom-center
   landY: 0.1,
   landRotY: -0.9, // slight 3/4 angle so the crouch reads
-  crouchT: 2.2, // 'jump' clip time (s) held as the landing crouch frame
+  crouchT: 0.15, // 'jump' clip time (s) held as the landing crouch frame
+  zoomScale: 9, // B5: how far the dolly closes in on the head (eyes must stay in frame)
+  zoomRotY: 0.05, // ...while he turns to face the camera
+  headLift: -0.22, // group x-tilt so the face comes up out of the crouch
+  headTilt: 0.7, // head-bone x added over the crouch pose: he raises his face to the camera
+  // ponytail: mid-face bone point, not the exact lens — bone-local solves for
+  // the lens proved seek-order-sensitive; the bloom reads the same from here
+  eyeOff: [0, 0, 0] as [number, number, number],
 }
 
 /* beat windows (fractions — must match IntroSequence BEATS) */
 const FLIP_A = 0.42
 const FLIP_B = 0.56
-const FIG_OUT = 0.74 // 3D figure fully handed off to the 2D mask zoom
+const LAND_B = 0.7
+const ZOOM_B = 0.88
+const FIG_OUT = 0.93 // figure lingers behind the expanding iris, then gone
 
-function Rig({ shared, handOut }: { shared: React.MutableRefObject<{ p: number }>; handOut: React.MutableRefObject<{ x: number; y: number } | null> }) {
+interface RigProps {
+  shared: React.MutableRefObject<{ p: number }>
+  handOut: React.MutableRefObject<{ x: number; y: number } | null>
+  headOut: React.MutableRefObject<{ x: number; y: number } | null>
+}
+
+function Rig({ shared, handOut, headOut }: RigProps) {
   const handBone = useRef<THREE.Object3D | null>(null)
+  const headBone = useRef<THREE.Object3D | null>(null)
+  const eyeAnchor = useRef<THREE.Object3D | null>(null)
+  const crouchHeadX = useRef<number | null>(null)
   const v3 = useRef(new THREE.Vector3())
+  const v3b = useRef(new THREE.Vector3())
   const group = useRef<THREE.Group>(null)
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   // local draco decoder (public/draco/) — drei's default is a gstatic CDN URL
@@ -60,7 +81,36 @@ function Rig({ shared, handOut }: { shared: React.MutableRefObject<{ p: number }
     })
     if (!hand) scene.traverse((o: THREE.Object3D) => { if (!hand && (o as THREE.Bone).isBone && /hand/i.test(o.name)) hand = o })
     handBone.current = hand
+    let head: THREE.Object3D | null = null
+    scene.traverse((o: THREE.Object3D) => { if (!head && (o as THREE.Bone).isBone && /head/i.test(o.name)) head = o })
+    headBone.current = head
+    // helper riding the head bone at the eye lens — the B6 iris origin
+    if (head && !eyeAnchor.current) {
+      const e = new THREE.Object3D()
+      ;(head as THREE.Object3D).add(e)
+      eyeAnchor.current = e
+    }
+
+    // silhouette treatment — OUR art language, not the source asset's:
+    // textured body → near-black navy, red accent meshes → brand red,
+    // white eye lenses → unlit glow (they read through the dark).
+    // keyed on mesh names (material names vanish after the first pass / HMR)
+    const EYES = ['Object_9', 'Object_13']
+    const RED = ['Object_7', 'Object_11', 'Object_16']
+    scene.traverse((o: THREE.Object3D) => {
+      const m = o as THREE.Mesh
+      if (!m.isMesh || m.userData.hvTreated) return
+      m.userData.hvTreated = true
+      if (EYES.includes(m.name)) {
+        m.material = new THREE.MeshBasicMaterial({ color: '#F2F4F8' })
+      } else if (RED.includes(m.name)) {
+        m.material = new THREE.MeshStandardMaterial({ color: '#E63946', roughness: 0.5, metalness: 0.1 })
+      } else {
+        m.material = new THREE.MeshStandardMaterial({ color: '#101828', roughness: 0.65, metalness: 0.2 })
+      }
+    })
     if (import.meta.env.DEV) {
+      ;(window as unknown as Record<string, unknown>).__spideyScene = scene
       const box = new THREE.Box3().setFromObject(scene)
       const size = new THREE.Vector3()
       box.getSize(size)
@@ -78,12 +128,17 @@ function Rig({ shared, handOut }: { shared: React.MutableRefObject<{ p: number }
     const cfg = { ...CFG, ...(window as unknown as { __spideyCfg?: Partial<typeof CFG> }).__spideyCfg }
     const p = shared.current.p
 
-    // landing holds a crouch frame; everywhere else the clip runs live
+    // landing/zoom hold a crouch frame; everywhere else the clip runs live.
+    // re-set time + epsilon update EVERY frame: update(0) on a paused action
+    // doesn't re-evaluate, which made the held pose depend on seek history
     const frozen = p >= FLIP_B && p < FIG_OUT
     const a = actionRef.current
     if (frozen && a) {
+      // reset clears LoopPingPong's loop-parity — without it the held frame
+      // plays mirrored depending on how long the live phase ran
+      a.reset()
       a.time = cfg.crouchT
-      mixer.update(0)
+      mixer.update(1 / 240)
     } else {
       mixer.update(Math.min(delta, 0.05))
     }
@@ -91,8 +146,9 @@ function Rig({ shared, handOut }: { shared: React.MutableRefObject<{ p: number }
     const s = swingState(p, size.width, size.height)
     const inSwing = s.figIn > 0.05 && s.ropeAlpha > 0.05 && p < SWING_FADED
     const inFlip = p >= FLIP_A && p < FLIP_B
-    const inLand = p >= FLIP_B && p < FIG_OUT
-    g.visible = inSwing || inFlip || inLand
+    const inLand = p >= FLIP_B && p < LAND_B
+    const inZoom = p >= LAND_B && p < FIG_OUT
+    g.visible = inSwing || inFlip || inLand || inZoom
     if (!g.visible) return
 
     // px → world at z=0 plane
@@ -122,15 +178,52 @@ function Rig({ shared, handOut }: { shared: React.MutableRefObject<{ p: number }
       g.rotation.z = -t * Math.PI * 4
       g.scale.setScalar(cfg.flipScale)
       scene.rotation.y = cfg.rotY
-    } else {
+    } else if (inLand) {
       // B4: three-point landing, bottom-center, held still (the dead-zone beat)
+      // remember the crouch head pose ONCE — the euler is never synced back
+      // from the mixer's quaternion writes, so re-capturing reads our own
+      // tilt from the last zoom frame and accumulates
+      if (headBone.current && crouchHeadX.current == null) crouchHeadX.current = headBone.current.rotation.x
       const gx = 0
       const gy = -(0.8 * size.height - size.height / 2) * k
       scene.position.y = 0
       g.position.set(gx + cfg.landX, gy + cfg.landY, 0)
       g.rotation.z = 0
+      g.rotation.x = 0
       g.scale.setScalar(cfg.landScale)
       scene.rotation.y = cfg.landRotY
+    } else {
+      // B5: THE LOOK — he raises his head to the camera and we dolly straight
+      // into the mask until an eye fills the frame (no 2D-art cut)
+      const zt = Math.min((p - LAND_B) / (ZOOM_B - LAND_B), 1)
+      const look = Math.min(zt * 3, 1) // the head-turn finishes early…
+      const ez = Math.pow(zt, 2.4) // …then the dolly accelerates in
+      // "THE LOOK": tilt the head bone up — absolute, from the crouch base pose
+      if (headBone.current) {
+        if (crouchHeadX.current == null) crouchHeadX.current = headBone.current.rotation.x
+        headBone.current.rotation.x = crouchHeadX.current + cfg.headTilt * look
+      }
+      const gy = -(0.8 * size.height - size.height / 2) * k
+      scene.position.y = 0
+      g.rotation.z = 0
+      g.rotation.x = cfg.headLift * look
+      g.scale.setScalar(cfg.landScale * (1 + (cfg.zoomScale - 1) * ez))
+      scene.rotation.y = cfg.landRotY + (cfg.zoomRotY - cfg.landRotY) * look
+      // anchor the HEAD: measure where it lands, then shift the group so the
+      // head tracks from its landing spot to just-above-center
+      g.position.set(cfg.landX, gy + cfg.landY, 0)
+      g.updateMatrixWorld(true)
+      if (headBone.current) {
+        headBone.current.getWorldPosition(v3b.current)
+        // bone sits at the neck: as scale grows the face rises above it, so the
+        // anchor drifts DOWN to keep the eyes in frame
+        const targetPx = { x: 0.5 * size.width, y: (0.42 + 0.22 * ez) * size.height }
+        const tx = (targetPx.x - size.width / 2) * k
+        const ty = -(targetPx.y - size.height / 2) * k
+        const blend = Math.min(zt * 4, 1) // ease into the anchored framing
+        g.position.x += (tx - v3b.current.x) * blend
+        g.position.y += (ty - v3b.current.y) * blend
+      }
     }
 
     if (import.meta.env.DEV) {
@@ -138,7 +231,7 @@ function Rig({ shared, handOut }: { shared: React.MutableRefObject<{ p: number }
       scene.traverse((o: THREE.Object3D) => { if ((o as THREE.Mesh).isMesh) meshes++ })
       ;(window as unknown as Record<string, unknown>).__spideyDbg = {
         p, visible: g.visible, pos: g.position.toArray(), scale: g.scale.x, meshes,
-        camZ: camera.position.z, size: [size.width, size.height],
+        camZ: camera.position.z, size: [size.width, size.height], eye: headOut.current,
       }
     }
     // project the grip hand bone to screen px for the rope
@@ -146,6 +239,16 @@ function Rig({ shared, handOut }: { shared: React.MutableRefObject<{ p: number }
       handBone.current.getWorldPosition(v3.current)
       v3.current.project(camera)
       handOut.current = {
+        x: (v3.current.x * 0.5 + 0.5) * size.width,
+        y: (1 - (v3.current.y * 0.5 + 0.5)) * size.height,
+      }
+    }
+    // project the eye anchor — the B6 iris blooms from the mask lens
+    if (eyeAnchor.current) {
+      eyeAnchor.current.position.set(...cfg.eyeOff)
+      eyeAnchor.current.getWorldPosition(v3.current)
+      v3.current.project(camera)
+      headOut.current = {
         x: (v3.current.x * 0.5 + 0.5) * size.width,
         y: (1 - (v3.current.y * 0.5 + 0.5)) * size.height,
       }
@@ -163,6 +266,7 @@ function Rig({ shared, handOut }: { shared: React.MutableRefObject<{ p: number }
 const SwingScene3D = forwardRef<Swing3DHandle>(function SwingScene3D(_, ref) {
   const shared = useRef({ p: 0 })
   const handOut = useRef<{ x: number; y: number } | null>(null)
+  const headOut = useRef<{ x: number; y: number } | null>(null)
 
   useImperativeHandle(ref, () => ({
     update(p: number) {
@@ -173,6 +277,9 @@ const SwingScene3D = forwardRef<Swing3DHandle>(function SwingScene3D(_, ref) {
     },
     handScreen() {
       return handOut.current
+    },
+    headScreen() {
+      return headOut.current
     },
   }))
 
@@ -185,12 +292,14 @@ const SwingScene3D = forwardRef<Swing3DHandle>(function SwingScene3D(_, ref) {
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         className="!h-full !w-full"
       >
-        <ambientLight intensity={1.25} />
-        <hemisphereLight intensity={0.6} color="#8A94A8" groundColor="#1C2536" />
-        <directionalLight position={[4, 6, 8]} intensity={1.6} />
-        <pointLight position={[-6, 2, 4]} intensity={30} color="#E63946" />
+        {/* silhouette lighting: dim cool base, hot red rim, faint blue kick */}
+        <ambientLight intensity={0.5} />
+        <hemisphereLight intensity={0.35} color="#8A94A8" groundColor="#1C2536" />
+        <directionalLight position={[4, 6, 8]} intensity={0.9} />
+        <pointLight position={[-6, 2, 4]} intensity={45} color="#E63946" />
+        <pointLight position={[6, -2, 3]} intensity={14} color="#4F7CFF" />
         <Suspense fallback={null}>
-          <Rig shared={shared} handOut={handOut} />
+          <Rig shared={shared} handOut={handOut} headOut={headOut} />
         </Suspense>
       </Canvas>
     </div>

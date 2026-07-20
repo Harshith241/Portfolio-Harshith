@@ -30,6 +30,30 @@ function CallLogMock() {
   )
 }
 
+/* §6 amplifier 2: quarter web-weave in the card corner, visible on hover only */
+function CornerWeb() {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      className="pointer-events-none absolute top-0 right-0 h-28 w-28 opacity-0 transition-opacity duration-500 group-hover:opacity-[0.08]"
+      aria-hidden
+    >
+      <g stroke="#F2F4F8" strokeWidth="1" fill="none">
+        {/* spokes from the corner */}
+        <path d="M100 0 L0 4" />
+        <path d="M100 0 L10 34" />
+        <path d="M100 0 L38 66" />
+        <path d="M100 0 L70 90" />
+        <path d="M100 0 L97 100" />
+        {/* sagging rings */}
+        <path d="M67 1 Q70 16 78 24 Q88 32 99 33" />
+        <path d="M34 3 Q42 34 58 50 Q76 64 99 66" />
+        <path d="M2 4 Q16 52 40 74 Q66 94 98 97" />
+      </g>
+    </svg>
+  )
+}
+
 export default function Projects() {
   return (
     <section id="projects" className="mx-auto max-w-6xl px-6 py-32 sm:px-12">
@@ -91,6 +115,7 @@ export default function Projects() {
               className="group flex h-full !w-auto flex-col !border-border !bg-surface !p-8 transition-colors duration-300 hover:!border-red/40"
               spotlightColor="rgba(79, 124, 255, 0.10)"
             >
+              <CornerWeb />
               <h3 className="font-display text-2xl font-bold">{p.name}</h3>
               <p className="mt-3 flex-1 text-sm leading-relaxed text-muted">{p.description}</p>
               <div className="mt-5 flex flex-wrap gap-2">
