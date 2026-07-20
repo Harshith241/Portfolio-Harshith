@@ -106,8 +106,25 @@
   on hover); 3) ClickSpark tips fork into micro web-Vs (branch = lineLength/2); 4) loader dot swings in
   on a red thread (CSS keyframes, thread fades at settle); 5) typing "thwip" → `hv-intro-replay`
   (App keydown buffer; ignores inputs/meta keys/reduced-motion). Build green (tsc + vite, 124 KB gz main).
+- [x] **I4c — suit colors + landing squat + pacing v2** (user: red/blue suit; land→squat→get up; flip
+  vague/too fast; landing→zoom→transition too fast):
+  (a) Suit: body → classic blue #24418F (accents stay brand red, eyes unlit white).
+  (b) Retimed beats in `beats.ts` (all files now DERIVE from BEATS — no more hand-synced fractions):
+  thwip 0–.07, swing .07–.32, flip .32–.48, landing .48–.68, zoom .68–.9, unmask .9–1; DURATION 6.5→9s
+  (flip 1.44s, landing 1.8s, zoom ~2s wall-clock).
+  (c) Flip: 720° → ONE smoothstep-eased 360° backflip (readable, finishes upright before the cut).
+  (d) Landing = squat→rise: no clip has a real squat (jump clip never lands — it's a running leap;
+  emote1/2/3 scanned, nothing) so it's SYNTHESIZED: hold jump@0.15 crouch with hips sunk
+  (squatSink .15 world-units) + forward lean (squatLean .28), then a mixer WEIGHT CROSS-FADE
+  jump@crouchT → idle@standT (smoothstep after riseStart .45 of the beat) stands him up; sink/lean
+  blend out with the same weight. Zoom now holds the STANDING idle pose (standClip/standT knobs;
+  wasFrozen ref restores the live pingpong action on reverse seeks). zoomScale retuned 9→14 for the
+  standing head (face + both lenses fill the frame at ZOOM_B).
+  All frames re-verified in-pane at 1280px: flip mid (180° upside-down), squat hold, mid-rise, stand,
+  the look, deep zoom, iris-over-face. Build green (tsc + vite).
 - [ ] Merge decision (user's move) + Vercel preview check on the branch URL. Re-verify the full
-  swing→flip→landing→zoom→iris flow in a REAL browser (pane rasterization can't show the scroll handoff).
+  swing→flip→landing→zoom→iris flow in a REAL browser (pane rasterization can't show the scroll handoff)
+  — especially the new 9s pacing, which only stills were checked for.
   ⚠️ Browser-pane verification notes for future sessions: (1) after every reload the pane is 0×0 and
   rAF is DEAD until a screenshot forces rasterization — screenshot first, THEN seek (seeks before layout
   size the rope canvas at 0). (2) gsap seeks to the same progress are no-ops — seek to a nearby value

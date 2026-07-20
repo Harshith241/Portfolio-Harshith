@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { Canvas, useFrame, invalidate, advance } from '@react-three/fiber'
 import { useGLTF, useAnimations } from '@react-three/drei'
 import { swingState, SWING_FADED } from './SwingScene'
+import { BEATS } from './beats'
 
 export interface Swing3DHandle {
   update(p: number): void
@@ -29,8 +30,14 @@ const CFG = {
   landX: 0, // world offset of the landing pose from bottom-center
   landY: 0.1,
   landRotY: -0.9, // slight 3/4 angle so the crouch reads
-  crouchT: 0.15, // 'jump' clip time (s) held as the landing crouch frame
-  zoomScale: 9, // B5: how far the dolly closes in on the head (eyes must stay in frame)
+  landClip: 'jump', // squat source clip…
+  crouchT: 0.15, // …at this time (s): the deep landing squat
+  standClip: 'idle', // rise target clip…
+  standT: 0.1, // …at this time: the upright pose he settles into
+  riseStart: 0.45, // fraction of the landing beat spent holding the squat
+  squatSink: 0.15, // world-units the hips drop during the squat hold (blends out on rise)
+  squatLean: 0.28, // forward body tilt during the squat hold
+  zoomScale: 14, // B5: how far the dolly closes in on the head (eyes must stay in frame)
   zoomRotY: 0.05, // ...while he turns to face the camera
   headLift: -0.22, // group x-tilt so the face comes up out of the crouch
   headTilt: 0.7, // head-bone x added over the crouch pose: he raises his face to the camera
@@ -39,12 +46,12 @@ const CFG = {
   eyeOff: [0, 0, 0] as [number, number, number],
 }
 
-/* beat windows (fractions — must match IntroSequence BEATS) */
-const FLIP_A = 0.42
-const FLIP_B = 0.56
-const LAND_B = 0.7
-const ZOOM_B = 0.88
-const FIG_OUT = 0.93 // figure lingers behind the expanding iris, then gone
+/* beat windows derived from the shared BEATS map */
+const FLIP_A = BEATS.flip[0]
+const FLIP_B = BEATS.flip[1]
+const LAND_B = BEATS.landing[1]
+const ZOOM_B = BEATS.zoom[1]
+const FIG_OUT = BEATS.unmask[0] + 0.05 // figure lingers behind the expanding iris, then gone
 
 interface RigProps {
   shared: React.MutableRefObject<{ p: number }>
@@ -57,6 +64,7 @@ function Rig({ shared, handOut, headOut }: RigProps) {
   const headBone = useRef<THREE.Object3D | null>(null)
   const eyeAnchor = useRef<THREE.Object3D | null>(null)
   const crouchHeadX = useRef<number | null>(null)
+  const wasFrozen = useRef(false)
   const v3 = useRef(new THREE.Vector3())
   const v3b = useRef(new THREE.Vector3())
   const group = useRef<THREE.Group>(null)
@@ -106,7 +114,8 @@ function Rig({ shared, handOut, headOut }: RigProps) {
       } else if (RED.includes(m.name)) {
         m.material = new THREE.MeshStandardMaterial({ color: '#E63946', roughness: 0.5, metalness: 0.1 })
       } else {
-        m.material = new THREE.MeshStandardMaterial({ color: '#101828', roughness: 0.65, metalness: 0.2 })
+        // classic suit blue (deep, so the red rim + eyes still carry the frame)
+        m.material = new THREE.MeshStandardMaterial({ color: '#24418F', roughness: 0.6, metalness: 0.15 })
       }
     })
     if (import.meta.env.DEV) {
@@ -128,18 +137,46 @@ function Rig({ shared, handOut, headOut }: RigProps) {
     const cfg = { ...CFG, ...(window as unknown as { __spideyCfg?: Partial<typeof CFG> }).__spideyCfg }
     const p = shared.current.p
 
-    // landing/zoom hold a crouch frame; everywhere else the clip runs live.
+    // landing/zoom scrub a posed clip time; everywhere else the clip runs live.
     // re-set time + epsilon update EVERY frame: update(0) on a paused action
     // doesn't re-evaluate, which made the held pose depend on seek history
     const frozen = p >= FLIP_B && p < FIG_OUT
-    const a = actionRef.current
-    if (frozen && a) {
-      // reset clears LoopPingPong's loop-parity — without it the held frame
-      // plays mirrored depending on how long the live phase ran
-      a.reset()
-      a.time = cfg.crouchT
+    const live = actionRef.current
+    if (frozen) {
+      // landing: hold the squat, then RISE — a weight cross-fade between two
+      // posed frames (the jump clip never actually lands, so no single clip
+      // has squat→stand). zoom holds the risen pose.
+      let w = 1 // stand weight
+      if (p < LAND_B) {
+        const lt = (p - FLIP_B) / (LAND_B - FLIP_B)
+        const rt = Math.min(Math.max((lt - cfg.riseStart) / (1 - cfg.riseStart), 0), 1)
+        w = rt * rt * (3 - 2 * rt) // smoothstep up
+      }
+      const aC = actions[cfg.landClip] ?? live
+      const aS = actions[cfg.standClip] ?? aC
+      if (live && live !== aC && live !== aS) live.stop()
+      if (aC) {
+        // reset clears LoopPingPong's loop-parity — without it the held frame
+        // plays mirrored depending on how long the live phase ran
+        aC.reset().play()
+        aC.time = cfg.crouchT
+        aC.setEffectiveWeight(aS && aS !== aC ? 1 - w : 1)
+      }
+      if (aS && aS !== aC) {
+        aS.reset().play()
+        aS.time = cfg.standT
+        aS.setEffectiveWeight(w)
+      }
       mixer.update(1 / 240)
+      wasFrozen.current = true
     } else {
+      if (wasFrozen.current) {
+        mixer.stopAllAction()
+        live?.reset().play()
+        live?.setEffectiveWeight(1)
+        wasFrozen.current = false
+      }
+      if (live && !live.isRunning()) live.reset().play()
       mixer.update(Math.min(delta, 0.05))
     }
 
@@ -168,28 +205,35 @@ function Rig({ shared, handOut, headOut }: RigProps) {
       g.scale.setScalar(cfg.scale * fit)
       scene.rotation.y = cfg.rotY
     } else if (inFlip) {
-      // B3: released — tucked flip arcing across the closer panel, 720°
-      // model root is at the FEET: recenter so the tumble pivots on the body
+      // B3: released — one clean readable backflip arcing across the panel
+      // (was 720°/0.9s — too fast to parse). model root is at the FEET:
+      // recenter so the tumble pivots on the body
       const t = (p - FLIP_A) / (FLIP_B - FLIP_A)
       const x = (-0.32 + 0.62 * t) * worldW
       const y = (-0.15 + 0.3 * (1 - (2 * t - 1) * (2 * t - 1))) * worldH
       scene.position.y = -0.82
       g.position.set(x, y, 0)
-      g.rotation.z = -t * Math.PI * 4
+      // ease the spin: slow in, finishes upright before the landing cut
+      const spin = t * t * (3 - 2 * t)
+      g.rotation.z = -spin * Math.PI * 2
       g.scale.setScalar(cfg.flipScale)
       scene.rotation.y = cfg.rotY
     } else if (inLand) {
-      // B4: three-point landing, bottom-center, held still (the dead-zone beat)
+      // B4: lands INTO a deep squat (hips sunk + forward lean over the crouch
+      // frame), holds, then rises as the clip blend stands him up
       // remember the crouch head pose ONCE — the euler is never synced back
       // from the mixer's quaternion writes, so re-capturing reads our own
       // tilt from the last zoom frame and accumulates
       if (headBone.current && crouchHeadX.current == null) crouchHeadX.current = headBone.current.rotation.x
+      const lt = (p - FLIP_B) / (LAND_B - FLIP_B)
+      const rt = Math.min(Math.max((lt - cfg.riseStart) / (1 - cfg.riseStart), 0), 1)
+      const w = rt * rt * (3 - 2 * rt) // 0 = deep squat, 1 = standing
       const gx = 0
       const gy = -(0.8 * size.height - size.height / 2) * k
       scene.position.y = 0
-      g.position.set(gx + cfg.landX, gy + cfg.landY, 0)
+      g.position.set(gx + cfg.landX, gy + cfg.landY - cfg.squatSink * (1 - w), 0)
       g.rotation.z = 0
-      g.rotation.x = 0
+      g.rotation.x = cfg.squatLean * (1 - w)
       g.scale.setScalar(cfg.landScale)
       scene.rotation.y = cfg.landRotY
     } else {

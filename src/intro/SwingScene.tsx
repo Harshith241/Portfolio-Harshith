@@ -1,16 +1,17 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react'
+import { BEATS } from './beats'
 
 export interface SwingSceneHandle {
   update(p: number, hand?: { x: number; y: number } | null): void
 }
 
-/* beat fractions (must match IntroSequence BEATS: thwip 0–.1, swing .1–.42) */
-const TIP_END = 0.062 // web tip reaches the corner
-const SPLAT_AT = 0.056
-const FIGURE_IN = 0.07
-const SWING_START = 0.1
-const SWING_END = 0.42
-export const SWING_FADED = SWING_END + 0.015 // hard cut into the flip panel (flash hides it)
+/* beat fractions derived from the shared BEATS map */
+const SWING_START = BEATS.swing[0]
+const SWING_END = BEATS.swing[1]
+const TIP_END = SWING_START * 0.62 // web tip reaches the corner mid-thwip
+const SPLAT_AT = SWING_START * 0.56
+const FIGURE_IN = SWING_START * 0.7
+export const SWING_FADED = SWING_END + 0.012 // hard cut into the flip panel (flash hides it)
 
 const THETA0 = (78 * Math.PI) / 180 // entry: rope nearly horizontal (the reference shot)
 const THETA1 = (-6 * Math.PI) / 180 // release just past the bottom of the arc

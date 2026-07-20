@@ -8,6 +8,7 @@ export interface FxLayerHandle {
 
 const [FLIP_A, FLIP_B] = BEATS.flip
 const LAND_A = BEATS.landing[0]
+const ZOOM_A = BEATS.zoom[0]
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 
@@ -129,9 +130,9 @@ const FxLayer = forwardRef<FxLayerHandle>(function FxLayer(_, ref) {
       }
 
       // web-crack lines radiating from the impact point
-      if (lt >= 0 && p < 0.78) {
+      if (lt >= 0 && p < ZOOM_A + 0.08) {
         const grow = clamp01(lt / 0.05)
-        const fade = p > 0.7 ? clamp01(1 - (p - 0.7) / 0.08) : 1
+        const fade = p > ZOOM_A ? clamp01(1 - (p - ZOOM_A) / 0.08) : 1
         ctx.save()
         ctx.globalAlpha = 0.8 * fade
         ctx.strokeStyle = '#C9D2E0'
